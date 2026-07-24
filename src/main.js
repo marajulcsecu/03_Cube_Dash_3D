@@ -37,15 +37,21 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const skipBtn = document.getElementById('tutorial-skip-btn');
     const handleSkip = (e) => {
-      e?.preventDefault();
-      e?.stopPropagation();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       if (gameInstance) {
         gameInstance.tutorialManager.completeTutorial();
         gameInstance.stateMachine.transitionTo('RUNNING');
       }
     };
-    skipBtn?.addEventListener('pointerdown', handleSkip);
-    skipBtn?.addEventListener('click', handleSkip);
+
+    if (skipBtn) {
+      skipBtn.addEventListener('click', handleSkip);
+      skipBtn.addEventListener('mousedown', handleSkip);
+      skipBtn.addEventListener('touchstart', handleSkip, { passive: false });
+    }
 
     document.getElementById('menu-settings-btn')?.addEventListener('click', () => {
       showModal('settings-shell', true);

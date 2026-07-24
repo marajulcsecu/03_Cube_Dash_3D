@@ -90,7 +90,9 @@ export class PlayerController {
       
       // Visual Stretch on takeoff
       this.currentScale.set(0.75, 1.35, 0.75);
+      return true;
     }
+    return false;
   }
 
   update(delta) {
