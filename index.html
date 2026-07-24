@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Cube Dash 3D</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div id="app-container">
+    <canvas id="game-canvas"></canvas>
+
+    <div id="ui-overlay">
+      <!-- Boot Loading Shell -->
+      <div id="boot-shell" class="boot-shell interactive">
+        <div class="boot-logo">Cube Dash 3D</div>
+        <div class="boot-subtitle">Loading Neon Realm...</div>
+        <div class="boot-spinner"></div>
+      </div>
+
+      <!-- Fatal Error Shell -->
+      <div id="error-shell" class="error-shell interactive">
+        <div class="error-title">SYSTEM FAILURE</div>
+        <div id="error-message" class="error-message">An unexpected anomaly occurred during simulation.</div>
+        <button id="error-retry-btn" class="btn-primary">RESTART PROTOCOL</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

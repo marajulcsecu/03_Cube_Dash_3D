@@ -1,0 +1,23 @@
+{
+  "name": "cube-dash-3d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cube Dash 3D - Offline 3D Tunnel Runner for MegaGameBox",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node tools/validate-size.js",
+    "bundle": "npm run build && node tools/bundle.js",
+    "test": "vitest run",
+    "size-report": "node tools/validate-size.js"
+  },
+  "dependencies": {
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "happy-dom": "^17.4.4",
+    "jszip": "^3.10.1",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}

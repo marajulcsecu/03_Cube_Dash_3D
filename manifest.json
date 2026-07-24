@@ -1,0 +1,17 @@
+{
+  "id": "cube-dash-3d",
+  "name": "Cube Dash 3D",
+  "description": "Dash through luminous 3D tunnels, dodge shifting walls and leap across deadly gaps.",
+  "category": "Arcade",
+  "tags": ["3d", "runner", "tunnel", "reflex", "offline"],
+  "version": "1.0.0",
+  "author": "MD. Marajul Haque",
+  "orientation": "portrait",
+  "difficulty": "medium",
+  "ageRating": "Everyone",
+  "supportsScore": true,
+  "supportsLevels": true,
+  "maxLevel": 0,
+  "hasAudio": true,
+  "isPremium": false
+}
