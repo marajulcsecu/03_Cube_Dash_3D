@@ -12,6 +12,7 @@ import { InputManager } from '../gameplay/InputManager.js';
 import { CollisionSystem } from '../gameplay/CollisionSystem.js';
 import { ScoreSystem } from '../gameplay/ScoreSystem.js';
 import { MissionManager } from '../gameplay/MissionManager.js';
+import { TutorialManager } from '../gameplay/TutorialManager.js';
 import { audioManager } from '../services/AudioManager.js';
 
 export class Game {
@@ -26,6 +27,7 @@ export class Game {
     this.collisionSystem = new CollisionSystem();
     this.scoreSystem = new ScoreSystem();
     this.missionManager = new MissionManager();
+    this.tutorialManager = new TutorialManager();
     this.debugOverlay = null;
     this.animationFrameId = null;
 
@@ -75,7 +77,7 @@ export class Game {
     }
   }
 
-  startRun() {
+  startRun(forceTutorial = false) {
     if (!this.renderer || !this.renderer.sceneFactory) return;
 
     this.shardsCollected = 0;
@@ -90,14 +92,20 @@ export class Game {
       this.renderer.sceneFactory.playerController.reset();
     }
 
-    this.stateMachine.transitionTo(STATES.RUNNING);
+    if (forceTutorial || !this.tutorialManager.completed) {
+      this.tutorialManager.startTutorial();
+      this.stateMachine.transitionTo(STATES.TUTORIAL);
+    } else {
+      this.stateMachine.transitionTo(STATES.RUNNING);
+    }
   }
 
   _setupInputListeners() {
     if (!this.inputManager) return;
 
     this.inputManager.onAction((action, payload) => {
-      if (this.stateMachine.getState() !== STATES.RUNNING) return;
+      const state = this.stateMachine.getState();
+      if (state !== STATES.RUNNING && state !== STATES.TUTORIAL) return;
 
       if (!this.renderer || !this.renderer.sceneFactory || !this.renderer.sceneFactory.playerController) return;
 
@@ -106,17 +114,42 @@ export class Game {
       switch (action) {
         case 'MOVE_LEFT':
           player.moveLeft();
+          this._checkTutorialAdvance('LANE_SHIFT');
           break;
         case 'MOVE_RIGHT':
           player.moveRight();
+          this._checkTutorialAdvance('LANE_SHIFT');
           break;
         case 'JUMP':
           if (player.jump()) {
             audioManager.playJump();
+            this._checkTutorialAdvance('JUMP');
           }
           break;
       }
     });
+  }
+
+  _checkTutorialAdvance(actionType) {
+    if (this.stateMachine.getState() !== STATES.TUTORIAL) return;
+
+    const currentPrompt = this.tutorialManager.getCurrentStepPrompt();
+    if (currentPrompt && currentPrompt.id === actionType) {
+      const finished = this.tutorialManager.advanceStep();
+      if (finished) {
+        this.stateMachine.transitionTo(STATES.RUNNING);
+      } else {
+        this._updateTutorialPrompt();
+      }
+    }
+  }
+
+  _updateTutorialPrompt() {
+    const prompt = this.tutorialManager.getCurrentStepPrompt();
+    const textEl = document.getElementById('tutorial-text');
+    if (textEl && prompt) {
+      textEl.textContent = prompt.text;
+    }
   }
 
   setQualityPreset(preset) {
@@ -163,8 +196,9 @@ export class Game {
       this.debugOverlay.update(this.clock, this.stateMachine);
     }
 
-    // Active gameplay collision & scoring check
-    if (this.stateMachine.getState() === STATES.RUNNING) {
+    // Active gameplay collision & scoring check (RUNNING or TUTORIAL)
+    const currentState = this.stateMachine.getState();
+    if (currentState === STATES.RUNNING || currentState === STATES.TUTORIAL) {
       if (this.renderer && this.renderer.sceneFactory) {
         const player = this.renderer.sceneFactory.playerController;
         const tunnelManager = this.renderer.sceneFactory.tunnelManager;
@@ -190,8 +224,9 @@ export class Game {
             if (hitResult.type === 'shard') {
               this.scoreSystem.collectShard();
               audioManager.playShard();
+              this._checkTutorialAdvance('SHARD');
               logger.info(`Collected Energy Shard! Total: ${this.scoreSystem.shardsCount}`);
-            } else {
+            } else if (currentState === STATES.RUNNING) {
               // Terminal collision (wall or gap)
               audioManager.playCollision();
               this.renderer.sceneFactory.triggerCameraShake(0.4);
@@ -199,6 +234,10 @@ export class Game {
               this.stateMachine.transitionTo(STATES.GAME_OVER, {
                 reason: hitResult.type === 'gap' ? 'Floor Gap Fall' : 'Obstacle Impact'
               });
+            } else {
+              // Safe non-terminal collision during tutorial
+              audioManager.playCollision();
+              player.reset();
             }
           }
         }
@@ -242,10 +281,24 @@ export class Game {
       this._updateUIState('menu-shell', false);
     });
 
+    this.stateMachine.onEnter(STATES.TUTORIAL, () => {
+      this._updateUIState('menu-shell', false);
+      this._updateUIState('hud-shell', true);
+      this._updateUIState('tutorial-shell', true);
+      this._updateUIState('gameover-shell', false);
+      this.clock.resume();
+      this._updateTutorialPrompt();
+    });
+
+    this.stateMachine.onLeave(STATES.TUTORIAL, () => {
+      this._updateUIState('tutorial-shell', false);
+    });
+
     this.stateMachine.onEnter(STATES.RUNNING, () => {
       this._updateUIState('menu-shell', false);
       this._updateUIState('pause-shell', false);
       this._updateUIState('hud-shell', true);
+      this._updateUIState('tutorial-shell', false);
       this._updateUIState('gameover-shell', false);
       this.clock.resume();
     });

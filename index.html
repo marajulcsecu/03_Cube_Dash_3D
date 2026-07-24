@@ -41,6 +41,15 @@
         </div>
       </div>
 
+      <!-- Tutorial Prompt Overlay Shell -->
+      <div id="tutorial-shell" class="tutorial-shell interactive" style="display: none;">
+        <div class="tutorial-card">
+          <div class="boot-badge">PILOT TRAINING</div>
+          <div id="tutorial-text" class="tutorial-text">SWIPE LEFT / RIGHT OR PRESS A / D TO SHIFT LANES</div>
+          <button id="tutorial-skip-btn" class="btn-secondary" style="margin-top: 12px; font-size: 0.75rem;">SKIP TUTORIAL</button>
+        </div>
+      </div>
+
       <!-- Main Menu Shell -->
       <div id="menu-shell" class="menu-shell interactive" style="display: none;">
         <div class="boot-badge">MEGAGAMEBOX OFFLINE ARCADE</div>
@@ -116,7 +125,10 @@
             </div>
           </div>
 
-          <button id="help-close-btn" class="btn-primary" style="margin-top: 16px;">BACK TO MENU</button>
+          <div class="guide-actions" style="display: flex; gap: 8px; margin-top: 16px; width: 100%;">
+            <button id="help-tutorial-btn" class="btn-secondary" style="flex: 1; font-size: 0.75rem;">REPLAY TUTORIAL</button>
+            <button id="help-close-btn" class="btn-primary" style="flex: 1;">BACK TO MENU</button>
+          </div>
         </div>
       </div>
 

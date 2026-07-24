@@ -30,6 +30,18 @@ window.addEventListener('DOMContentLoaded', () => {
       showModal('help-shell', false);
     });
 
+    document.getElementById('help-tutorial-btn')?.addEventListener('click', () => {
+      showModal('help-shell', false);
+      gameInstance?.startRun(true); // Force tutorial restart!
+    });
+
+    document.getElementById('tutorial-skip-btn')?.addEventListener('click', () => {
+      if (gameInstance) {
+        gameInstance.tutorialManager.completeTutorial();
+        gameInstance.stateMachine.transitionTo('RUNNING');
+      }
+    });
+
     document.getElementById('menu-settings-btn')?.addEventListener('click', () => {
       showModal('settings-shell', true);
     });
