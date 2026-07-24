@@ -295,52 +295,52 @@ export class SpaceEnvironment {
   spawnPassingSpaceship() {
     const shipGroup = this._createSpaceshipMesh();
 
-    // Select random close-range flyby mode (Left Side, Right Side, Overhead Swoop, Diagonal Pass)
+    // Select random outer space flyby trajectory (ALL STRICTLY OUTSIDE THE WIREFRAME TUBE)
     const flybyMode = Math.floor(Math.random() * 4);
 
     let startX = 0, startY = 0, startZ = 0;
     let endX = 0, endY = 0, endZ = 0;
-    let speed = 90 + Math.random() * 40;
+    let speed = 95 + Math.random() * 40;
 
     switch (flybyMode) {
       case 0:
-        // ── 1. LEFT SIDE FLYBY (Zooms from ahead past player right beside left tunnel wall) ──
-        startX = -11.5;
-        startY = 2.5 + Math.random() * 2.0;
-        startZ = -120;
-        endX = -11.5;
+        // ── 1. LEFT OUTER SPACE FLYBY (Far outside left of the tube in deep space) ──
+        startX = -22.0;
+        startY = 6.0 + Math.random() * 4.0;
+        startZ = -130;
+        endX = -22.0;
         endY = startY;
         endZ = 45;
         break;
 
       case 1:
-        // ── 2. RIGHT SIDE OVERTAKE (Zooms from behind player past right tunnel wall) ──
-        startX = 12.0;
-        startY = 3.0 + Math.random() * 2.0;
+        // ── 2. RIGHT OUTER SPACE OVERTAKE (Far outside right of the tube in deep space) ──
+        startX = 24.0;
+        startY = 8.0 + Math.random() * 4.0;
         startZ = 45;
-        endX = 12.0;
+        endX = 24.0;
         endY = startY;
-        endZ = -130;
+        endZ = -140;
         break;
 
       case 2:
-        // ── 3. OVERHEAD CROSSING (Swoops diagonally right over the tunnel roof) ──
-        startX = -35;
-        startY = 14.0;
-        startZ = -80;
-        endX = 35;
-        endY = 10.0;
+        // ── 3. HIGH OVERHEAD SPACE CROSSING (Far above the top roof of the tube) ──
+        startX = -45.0;
+        startY = 22.0;
+        startZ = -90;
+        endX = 45.0;
+        endY = 18.0;
         endZ = -20;
         break;
 
       case 3:
       default:
-        // ── 4. LOW DIAGONAL WARP PASS (Zooms low beside left wall into sky) ──
-        startX = -14.0;
-        startY = 1.0;
-        startZ = -110;
-        endX = 15.0;
-        endY = 16.0;
+        // ── 4. DIAGONAL SPACE WARP PASS (Across deep space outer void) ──
+        startX = -30.0;
+        startY = 6.0;
+        startZ = -120;
+        endX = 30.0;
+        endY = 22.0;
         endZ = 35;
         break;
     }
