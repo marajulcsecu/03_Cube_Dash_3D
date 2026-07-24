@@ -86,24 +86,35 @@ export class SceneFactory {
     const playerX = this.playerController?.position.x || 0;
     const playerY = this.playerController?.position.y || 0.5;
 
+    const aspect = this.camera.aspect || (window.innerWidth / window.innerHeight);
+
+    // Responsive aspect ratio adjustment for mobile portrait viewports
+    // When aspect < 1.6 (portrait mobile/tablet), pull camera back & scale FOV to keep outer lanes visible
+    const portraitFactor = Math.max(0, Math.min(1.0, (1.6 - aspect) / 1.15));
+    const baseCamZ = 6.5 + portraitFactor * 4.5;
+    const baseCamY = 2.8 + portraitFactor * 1.5;
+
     if (this.reducedMotion) {
-      this.camera.position.set(0, 2.8, 6.5);
-      this.camera.fov = 70;
+      this.camera.position.set(0, baseCamY, baseCamZ);
+      this.camera.fov = 70 + portraitFactor * 18.0;
       this.camera.updateProjectionMatrix();
       return;
     }
 
-    // 1. Dynamic Speed FOV Scaling (70 -> 78 degrees max)
+    // 1. Dynamic Speed FOV Scaling (70 -> 78 degrees base, plus portrait adaptation)
     const speedRatio = Math.min(1.0, (currentSpeed - 15) / 15);
-    this.targetFov = 70 + speedRatio * 8.0;
+    this.targetFov = (70 + speedRatio * 8.0) + (portraitFactor * 18.0);
     this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, delta * 3.0);
     this.camera.updateProjectionMatrix();
 
-    // 2. Damped Camera X Sway following player lane (max sway 0.8 units)
-    const targetCamX = playerX * 0.2;
-    const targetCamY = 2.8 + (playerY - 0.5) * 0.15;
+    // 2. Damped Camera X Sway following player lane (sway scaled down on tight portrait screens)
+    const swayScale = 0.2 * (1.0 - portraitFactor * 0.5);
+    const targetCamX = playerX * swayScale;
+    const targetCamY = baseCamY + (playerY - 0.5) * 0.15;
+
     this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 6.0);
     this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 6.0);
+    this.camera.position.z += (baseCamZ - this.camera.position.z) * Math.min(1.0, delta * 6.0);
 
     // 3. Capped Camera Shake Decay
     if (this.cameraShakeIntensity > 0) {
@@ -115,7 +126,7 @@ export class SceneFactory {
       this.cameraShakeIntensity = Math.max(0, this.cameraShakeIntensity - delta * 2.0);
     }
 
-    this.camera.lookAt(playerX * 0.1, 1.0, -30);
+    this.camera.lookAt(playerX * 0.05, 1.0, -30);
   }
 
   updateAspect(width, height) {

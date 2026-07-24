@@ -9,6 +9,8 @@ describe('AudioManager & Camera Language Unit Tests', () => {
   beforeEach(() => {
     audio = new AudioManager();
     sceneFactory = new SceneFactory();
+    // Default test aspect ratio to 16:9 landscape desktop
+    sceneFactory.camera.aspect = 16 / 9;
   });
 
   it('should initialize AudioManager and support window.setAudioMuted bridge', () => {
@@ -22,7 +24,7 @@ describe('AudioManager & Camera Language Unit Tests', () => {
     expect(audio.muted).toBe(false);
   });
 
-  it('should scale camera FOV smoothly based on runner speed', () => {
+  it('should scale camera FOV smoothly based on runner speed in landscape mode', () => {
     const initialFov = sceneFactory.camera.fov;
     expect(initialFov).toBe(70);
 
@@ -32,6 +34,17 @@ describe('AudioManager & Camera Language Unit Tests', () => {
 
     expect(sceneFactory.camera.fov).toBeGreaterThan(70);
     expect(sceneFactory.camera.fov).toBeLessThanOrEqual(78);
+  });
+
+  it('should pull back camera position and scale FOV in mobile portrait viewports (400x840)', () => {
+    // Mobile portrait aspect ratio: 400 / 840 = 0.476
+    sceneFactory.camera.aspect = 400 / 840;
+    sceneFactory.update(1.0, 1.0);
+
+    // Camera Z should be pulled back from 6.5 to ~11.0
+    expect(sceneFactory.camera.position.z).toBeGreaterThan(10.0);
+    // FOV should expand to maintain horizontal coverage
+    expect(sceneFactory.camera.fov).toBeGreaterThan(80.0);
   });
 
   it('should trigger and decay camera shake on impact', () => {
