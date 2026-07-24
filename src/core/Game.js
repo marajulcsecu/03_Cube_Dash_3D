@@ -75,9 +75,10 @@ export class Game {
 
     this.shardsCollected = 0;
 
-    // Reset world and player
+    // Reset world and player (preserve manually selected debug tier if any)
     if (this.renderer.sceneFactory.tunnelManager) {
-      this.renderer.sceneFactory.tunnelManager.initWorld();
+      const hasManualTier = this.renderer.sceneFactory.tunnelManager.manualTierOverride !== null;
+      this.renderer.sceneFactory.tunnelManager.initWorld(hasManualTier);
     }
     if (this.renderer.sceneFactory.playerController) {
       this.renderer.sceneFactory.playerController.reset();

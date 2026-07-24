@@ -86,7 +86,7 @@ export class DebugOverlay {
     [1, 2, 3, 4, 5].forEach(t => {
       this.overlayEl.querySelector(`#tier-${t}-btn`).addEventListener('click', () => {
         if (this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
-          this.game.renderer.sceneFactory.tunnelManager.difficultyDirector.setTierDirectly(t);
+          this.game.renderer.sceneFactory.tunnelManager.setManualTier(t);
         }
       });
     });

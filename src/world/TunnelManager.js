@@ -34,12 +34,23 @@ export class TunnelManager {
       25
     );
 
+    this.manualTierOverride = null;
+
     this.initWorld();
   }
 
-  initWorld() {
+  initWorld(preserveTier = false) {
+    const savedTier = (preserveTier || this.manualTierOverride)
+      ? (this.difficultyDirector.currentTierIndex + 1)
+      : null;
+
     this.clearWorld();
-    this.difficultyDirector.reset();
+
+    if (savedTier !== null) {
+      this.difficultyDirector.setTierDirectly(savedTier);
+    } else {
+      this.difficultyDirector.reset();
+    }
 
     for (let i = 0; i < this.visibleSegmentsCount; i++) {
       this._spawnNextSegment(i * -this.segmentLength);
@@ -49,6 +60,11 @@ export class TunnelManager {
       seed: this.rng.initialSeed,
       active: this.activeSegments.length
     });
+  }
+
+  setManualTier(tierNumber) {
+    this.manualTierOverride = tierNumber;
+    this.difficultyDirector.setTierDirectly(tierNumber);
   }
 
   _spawnNextSegment(targetZ) {
