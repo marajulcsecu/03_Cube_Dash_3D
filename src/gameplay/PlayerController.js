@@ -67,48 +67,121 @@ export class PlayerController {
   _buildAlienRider() {
     this.alienGroup = new THREE.Group();
     this.alienGroup.name = 'AlienRider';
-    this.alienGroup.position.set(0, 0.5, 0); // Mounted on top of cube top face
+    // Position at top of cube surface (cube is 1 unit tall, centered at 0, so top face is at +0.5)
+    this.alienGroup.position.set(0, 0.5, 0);
 
-    // Load generated Alien Pilot Texture
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.load('assets/alien_pilot.png', (texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      const spriteMat = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true,
-        depthWrite: false
-      });
-      const sprite = new THREE.Sprite(spriteMat);
-      sprite.scale.set(1.5, 1.5, 1.5);
-      sprite.position.set(0, 0.65, 0);
-      this.alienGroup.add(sprite);
-    }, undefined, () => {
-      // Fallback Procedural Neon Alien Mesh
-      const headGeo = new THREE.SphereGeometry(0.28, 16, 16);
-      const headMat = new THREE.MeshStandardMaterial({
-        color: 0x00f3ff,
-        emissive: 0x00a8ff,
-        emissiveIntensity: 0.6,
-        roughness: 0.2
-      });
-      const headMesh = new THREE.Mesh(headGeo, headMat);
-      headMesh.position.set(0, 0.4, 0);
-      this.alienGroup.add(headMesh);
+    // ── Skin & material palette ──────────────────────────────────────────────
+    const skinMat   = new THREE.MeshStandardMaterial({ color: 0x3de8c8, roughness: 0.5, metalness: 0.1 });
+    const suitMat   = new THREE.MeshStandardMaterial({ color: 0x1a0a3a, roughness: 0.6 });
+    const suitTrimMat = new THREE.MeshStandardMaterial({ color: 0xff007f, roughness: 0.4, metalness: 0.3 });
+    const visorMat  = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00a8ff, emissiveIntensity: 1.2, transparent: true, opacity: 0.85, roughness: 0.05 });
+    const eyeGlowMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+    const orbMat    = new THREE.MeshBasicMaterial({ color: 0xff007f });
+    const darkMat   = new THREE.MeshStandardMaterial({ color: 0x0a0320, roughness: 0.8 });
 
-      // Antennae with glowing orb tips
-      [-0.15, 0.15].forEach(xOffset => {
-        const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 8);
-        const antMat = new THREE.MeshBasicMaterial({ color: 0xff007f });
-        const antMesh = new THREE.Mesh(antGeo, antMat);
-        antMesh.position.set(xOffset, 0.6, 0);
-        this.alienGroup.add(antMesh);
+    // ── LEGS (two short cylinders, standing on cube) ─────────────────────────
+    [[-0.12, 0], [0.12, 0]].forEach(([lx]) => {
+      const legGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.22, 8);
+      const leg = new THREE.Mesh(legGeo, suitMat);
+      leg.position.set(lx, 0.11, 0);
+      this.alienGroup.add(leg);
 
-        const orbGeo = new THREE.SphereGeometry(0.06, 8, 8);
-        const orbMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-        const orbMesh = new THREE.Mesh(orbGeo, orbMat);
-        orbMesh.position.set(xOffset, 0.75, 0);
-        this.alienGroup.add(orbMesh);
-      });
+      // Boot
+      const bootGeo = new THREE.BoxGeometry(0.12, 0.06, 0.16);
+      const boot = new THREE.Mesh(bootGeo, darkMat);
+      boot.position.set(lx, 0.00, 0.02);
+      this.alienGroup.add(boot);
+    });
+
+    // ── TORSO (slightly flared box with suit trim) ───────────────────────────
+    const torsoGeo = new THREE.BoxGeometry(0.38, 0.28, 0.22);
+    const torso = new THREE.Mesh(torsoGeo, suitMat);
+    torso.position.set(0, 0.36, 0);
+    this.alienGroup.add(torso);
+
+    // Chest trim stripe
+    const trimGeo = new THREE.BoxGeometry(0.38, 0.04, 0.23);
+    const trim = new THREE.Mesh(trimGeo, suitTrimMat);
+    trim.position.set(0, 0.38, 0);
+    this.alienGroup.add(trim);
+
+    // Chest panel glow
+    const panelGeo = new THREE.BoxGeometry(0.12, 0.10, 0.24);
+    const panel = new THREE.Mesh(panelGeo, visorMat);
+    panel.position.set(0, 0.35, 0);
+    this.alienGroup.add(panel);
+
+    // ── ARMS (angled outward) ────────────────────────────────────────────────
+    [[-1, -0.22], [1, 0.22]].forEach(([side, xPos]) => {
+      const armGeo = new THREE.CylinderGeometry(0.06, 0.05, 0.24, 8);
+      const arm = new THREE.Mesh(armGeo, suitMat);
+      arm.rotation.z = side * 0.6;
+      arm.position.set(xPos, 0.32, 0);
+      this.alienGroup.add(arm);
+
+      // Glove
+      const gloveGeo = new THREE.SphereGeometry(0.07, 8, 8);
+      const glove = new THREE.Mesh(gloveGeo, skinMat);
+      glove.position.set(xPos + side * 0.08, 0.22, 0);
+      this.alienGroup.add(glove);
+    });
+
+    // ── NECK ─────────────────────────────────────────────────────────────────
+    const neckGeo = new THREE.CylinderGeometry(0.07, 0.09, 0.08, 8);
+    const neck = new THREE.Mesh(neckGeo, skinMat);
+    neck.position.set(0, 0.54, 0);
+    this.alienGroup.add(neck);
+
+    // ── HEAD (slightly oval) ─────────────────────────────────────────────────
+    const headGeo = new THREE.SphereGeometry(0.22, 16, 16);
+    const head = new THREE.Mesh(headGeo, skinMat);
+    head.scale.set(1, 1.15, 0.95);
+    head.position.set(0, 0.74, 0);
+    this.alienGroup.add(head);
+
+    // ── VISOR (flat ellipse across face front) ───────────────────────────────
+    const visorGeo = new THREE.BoxGeometry(0.32, 0.12, 0.06);
+    const visor = new THREE.Mesh(visorGeo, visorMat);
+    visor.position.set(0, 0.74, 0.19);
+    this.alienGroup.add(visor);
+
+    // ── EYES (glowing dots inside visor) ────────────────────────────────────
+    [-0.08, 0.08].forEach(ex => {
+      const eyeGeo = new THREE.SphereGeometry(0.035, 8, 8);
+      const eye = new THREE.Mesh(eyeGeo, eyeGlowMat);
+      eye.position.set(ex, 0.74, 0.22);
+      this.alienGroup.add(eye);
+    });
+
+    // ── HELMET RIM ───────────────────────────────────────────────────────────
+    const rimGeo = new THREE.TorusGeometry(0.22, 0.025, 8, 24, Math.PI);
+    const rim = new THREE.Mesh(rimGeo, suitTrimMat);
+    rim.position.set(0, 0.74, 0);
+    rim.rotation.y = Math.PI / 2;
+    this.alienGroup.add(rim);
+
+    // ── ANTENNAE ─────────────────────────────────────────────────────────────
+    [[-0.12, 0.1], [0.12, -0.1]].forEach(([ax, az]) => {
+      const antBase = new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8);
+      const ant = new THREE.Mesh(antBase, suitTrimMat);
+      ant.position.set(ax, 1.01, az);
+      ant.rotation.z = ax < 0 ? -0.25 : 0.25;
+      this.alienGroup.add(ant);
+
+      // Glowing orb tip
+      const orbGeo = new THREE.SphereGeometry(0.045, 8, 8);
+      const orb = new THREE.Mesh(orbGeo, orbMat);
+      orb.position.set(ax + (ax < 0 ? -0.05 : 0.05), 1.12, az);
+      this.alienGroup.add(orb);
+    });
+
+    // ── EAR FINS (pointed alien ears) ────────────────────────────────────────
+    [-1, 1].forEach(side => {
+      const earGeo = new THREE.ConeGeometry(0.06, 0.18, 6);
+      const ear = new THREE.Mesh(earGeo, skinMat);
+      ear.rotation.z = side * (Math.PI / 2 + 0.3);
+      ear.position.set(side * 0.28, 0.76, 0);
+      this.alienGroup.add(ear);
     });
 
     this.visualMesh.add(this.alienGroup);
