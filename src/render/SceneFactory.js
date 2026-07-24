@@ -89,9 +89,11 @@ export class SceneFactory {
   }
 
   update(delta, elapsed) {
-    // Update cosmic outer space backdrop
+    const currentSpeed = this.tunnelManager?.difficultyDirector?.currentSpeed || 20;
+
+    // Update cosmic outer space backdrop with dynamic Z parallax travel
     if (this.spaceEnvironment) {
-      this.spaceEnvironment.update(delta, elapsed);
+      this.spaceEnvironment.update(delta, currentSpeed);
     }
 
     // Update endless pooled tunnel segments
