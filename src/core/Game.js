@@ -10,6 +10,8 @@ import { DebugOverlay } from '../ui/DebugOverlay.js';
 import { ResponsiveRenderer } from '../render/ResponsiveRenderer.js';
 import { InputManager } from '../gameplay/InputManager.js';
 import { CollisionSystem } from '../gameplay/CollisionSystem.js';
+import { ScoreSystem } from '../gameplay/ScoreSystem.js';
+import { MissionManager } from '../gameplay/MissionManager.js';
 
 export class Game {
   constructor(customConfig = {}) {
@@ -21,6 +23,8 @@ export class Game {
     this.renderer = null;
     this.inputManager = null;
     this.collisionSystem = new CollisionSystem();
+    this.scoreSystem = new ScoreSystem();
+    this.missionManager = new MissionManager();
     this.debugOverlay = null;
     this.animationFrameId = null;
 
@@ -74,6 +78,7 @@ export class Game {
     if (!this.renderer || !this.renderer.sceneFactory) return;
 
     this.shardsCollected = 0;
+    this.scoreSystem.reset();
 
     // Reset world and player (preserve manually selected debug tier if any)
     if (this.renderer.sceneFactory.tunnelManager) {
@@ -155,19 +160,33 @@ export class Game {
       this.debugOverlay.update(this.clock, this.stateMachine);
     }
 
-    // Active gameplay collision check
+    // Active gameplay collision & scoring check
     if (this.stateMachine.getState() === STATES.RUNNING) {
       if (this.renderer && this.renderer.sceneFactory) {
         const player = this.renderer.sceneFactory.playerController;
         const tunnelManager = this.renderer.sceneFactory.tunnelManager;
 
         if (player && tunnelManager) {
+          // Update real-time distance score
+          const distanceMeters = tunnelManager.difficultyDirector.distanceCovered;
+          this.scoreSystem.updateDistance(distanceMeters);
+
+          // Update mission progress
+          this.missionManager.updateProgress({
+            shards: this.scoreSystem.shardsCount,
+            distance: Math.floor(distanceMeters),
+            multiplier: this.scoreSystem.multiplier
+          });
+
+          // Update HUD DOM Elements
+          this._updateHUD();
+
           const hitResult = this.collisionSystem.checkCollisions(player, tunnelManager.activeSegments);
           
           if (hitResult && hitResult.hit) {
             if (hitResult.type === 'shard') {
-              this.shardsCollected = (this.shardsCollected || 0) + 1;
-              logger.info(`Collected Energy Shard! Total: ${this.shardsCollected}`);
+              this.scoreSystem.collectShard();
+              logger.info(`Collected Energy Shard! Total: ${this.scoreSystem.shardsCount}`);
             } else {
               // Terminal collision (wall or gap)
               logger.info(`Terminal Collision: ${hitResult.type}`);
@@ -179,6 +198,16 @@ export class Game {
         }
       }
     }
+  }
+
+  _updateHUD() {
+    const scoreEl = document.getElementById('hud-score');
+    const multEl = document.getElementById('hud-multiplier');
+    const shardsEl = document.getElementById('hud-shards');
+
+    if (scoreEl) scoreEl.textContent = this.scoreSystem.score.toLocaleString();
+    if (multEl) multEl.textContent = `${this.scoreSystem.multiplier}x`;
+    if (shardsEl) shardsEl.textContent = this.scoreSystem.shardsCount.toString();
   }
 
   render(delta = 0) {
@@ -198,6 +227,7 @@ export class Game {
 
     this.stateMachine.onEnter(STATES.MENU, () => {
       this._updateUIState('menu-shell', true);
+      this._updateUIState('hud-shell', false);
       this._updateUIState('gameover-shell', false);
       this.clock.pause();
     });
@@ -208,16 +238,42 @@ export class Game {
 
     this.stateMachine.onEnter(STATES.RUNNING, () => {
       this._updateUIState('menu-shell', false);
+      this._updateUIState('hud-shell', true);
       this._updateUIState('gameover-shell', false);
       this.clock.resume();
     });
 
     this.stateMachine.onEnter(STATES.GAME_OVER, (prev, payload) => {
       this.clock.pause();
+      this._updateUIState('hud-shell', false);
       this._updateUIState('gameover-shell', true);
+
       const reasonEl = document.getElementById('gameover-reason');
       if (reasonEl) {
         reasonEl.textContent = payload.reason || 'Obstacle Impact';
+      }
+
+      // Populate Stats Breakdown
+      const goScore = document.getElementById('go-score');
+      const goHigh = document.getElementById('go-highscore');
+      const goDist = document.getElementById('go-distance');
+      const goShards = document.getElementById('go-shards');
+      const goMissions = document.getElementById('go-missions');
+
+      const distance = this.renderer?.sceneFactory?.tunnelManager?.difficultyDirector?.distanceCovered || 0;
+
+      if (goScore) goScore.textContent = this.scoreSystem.score.toLocaleString();
+      if (goHigh) goHigh.textContent = this.scoreSystem.highScore.toLocaleString();
+      if (goDist) goDist.textContent = `${Math.floor(distance)}m`;
+      if (goShards) goShards.textContent = this.scoreSystem.shardsCount.toString();
+
+      if (goMissions) {
+        goMissions.innerHTML = this.missionManager.missions.map(m => `
+          <div class="mission-card ${m.completed ? 'done' : ''}">
+            <span>${m.title}</span>
+            <span>${m.completed ? '✓ DONE' : `${m.progress}/${m.target}`}</span>
+          </div>
+        `).join('');
       }
     });
 

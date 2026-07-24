@@ -234,6 +234,112 @@ html, body {
   background: rgba(255, 51, 102, 0.25);
 }
 
+/* In-Game HUD Shell */
+.hud-shell {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 16px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: rgba(10, 15, 30, 0.6);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+}
+
+.hud-label {
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  color: var(--color-text-dim);
+}
+
+.hud-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.hud-value.accent {
+  color: var(--color-primary);
+}
+
+.hud-value.cyan {
+  color: #00f3ff;
+}
+
+/* Game Over Stats Breakdown Grid */
+.gameover-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+  margin: 12px 0;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 10, 20, 0.6);
+  border: 1px solid rgba(255, 51, 102, 0.3);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  color: var(--color-text-dim);
+}
+
+.stat-val {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--color-text);
+}
+
+.stat-val.highlight {
+  color: var(--color-danger);
+}
+
+.stat-val.cyan {
+  color: #00f3ff;
+}
+
+.gameover-missions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 12px;
+}
+
+.mission-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(10, 15, 30, 0.5);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.mission-card.done {
+  border-color: #00f3ff;
+  background: rgba(0, 243, 255, 0.15);
+}
+
 /* Game Over Shell */
 .gameover-shell {
   display: flex;
