@@ -166,7 +166,9 @@ html, body {
   height: 100%;
   padding: 24px;
   text-align: center;
-  background: radial-gradient(circle at center, #12182c 0%, #070913 100%);
+  background: radial-gradient(circle at center, rgba(18, 24, 44, 0.45) 0%, rgba(7, 9, 19, 0.75) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   gap: 16px;
 }
 

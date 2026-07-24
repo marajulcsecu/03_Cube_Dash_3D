@@ -12,11 +12,11 @@ export class MaterialFactory {
   }
 
   _initMaterials() {
-    // Deep Space Tunnel Wall Material
+    // Deep Space Tunnel Wall Material with bright emissive lines
     this.materials.set('tunnelWall', new THREE.MeshStandardMaterial({
-      color: 0x0a0f24,
-      roughness: 0.8,
-      metalness: 0.2,
+      color: 0x0d122b,
+      roughness: 0.5,
+      metalness: 0.5,
       flatShading: true
     }));
 
@@ -25,22 +25,22 @@ export class MaterialFactory {
       color: 0x00f3ff,
       wireframe: true,
       transparent: true,
-      opacity: 0.6
+      opacity: 0.85
     }));
 
     // Violet Neon Accents
-    this.materials.set('violetEmissive', new THREE.MeshStandardMaterial({
+    this.materials.set('violetEmissive', new THREE.MeshBasicMaterial({
       color: 0x9d4edd,
-      emissive: 0x9d4edd,
-      emissiveIntensity: 0.8,
-      roughness: 0.3
+      wireframe: true,
+      transparent: true,
+      opacity: 0.9
     }));
 
     // Warm Amber Hazard Material
     this.materials.set('amberEmissive', new THREE.MeshStandardMaterial({
       color: 0xff9e00,
       emissive: 0xff9e00,
-      emissiveIntensity: 0.9,
+      emissiveIntensity: 1.2,
       roughness: 0.2
     }));
 
@@ -48,7 +48,7 @@ export class MaterialFactory {
     this.materials.set('playerCube', new THREE.MeshStandardMaterial({
       color: 0x00f3ff,
       emissive: 0x00a8ff,
-      emissiveIntensity: 0.7,
+      emissiveIntensity: 0.8,
       roughness: 0.1,
       metalness: 0.8
     }));
@@ -57,7 +57,7 @@ export class MaterialFactory {
     this.materials.set('energyShard', new THREE.MeshStandardMaterial({
       color: 0x00ffff,
       emissive: 0x00ffff,
-      emissiveIntensity: 1.0,
+      emissiveIntensity: 1.2,
       roughness: 0.1
     }));
   }
