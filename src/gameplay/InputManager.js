@@ -121,10 +121,12 @@ export class InputManager {
     switch (e.code) {
       case 'ArrowLeft':
       case 'KeyA':
+        e.preventDefault();
         this._emit('MOVE_LEFT');
         break;
       case 'ArrowRight':
       case 'KeyD':
+        e.preventDefault();
         this._emit('MOVE_RIGHT');
         break;
       case 'ArrowUp':

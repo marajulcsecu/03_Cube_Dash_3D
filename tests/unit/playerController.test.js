@@ -70,19 +70,17 @@ describe('PlayerController Unit Tests', () => {
     expect(player.isGrounded).toBe(true);
   });
 
-  it('should queue at most one extra lane move during fast swipes', () => {
+  it('should support instant mid-transition redirection on rapid key presses', () => {
     player.moveRight(); // Initiate 2 -> 3
-    player.moveRight(); // Queue 3 -> 4
-    player.moveRight(); // Ignored (max 1 queued)
-
     expect(player.targetLane).toBe(3);
-    expect(player.queuedMove).toBe(1);
 
-    player.update(0.2); // Finishes 2 -> 3, picks up queued move 3 -> 4
+    player.update(0.05); // Mid-transition
+    player.moveRight(); // Rapid second press 3 -> 4
     expect(player.targetLane).toBe(4);
 
-    player.update(0.2); // Finishes 3 -> 4
+    player.update(0.2); // Complete transition
     expect(player.currentLane).toBe(4);
+    expect(player.currentX).toBe(4.0);
   });
 
   it('should produce identical movement outcomes at 30 Hz vs 60 Hz vs 120 Hz', () => {
