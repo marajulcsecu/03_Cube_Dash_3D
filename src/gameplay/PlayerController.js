@@ -73,6 +73,23 @@ export class PlayerController {
   }
 
   _buildAlienRider() {
+    // ── Clean up any previous alien rider instances from visualMesh and scene ─
+    if (this.visualMesh) {
+      for (let i = this.visualMesh.children.length - 1; i >= 0; i--) {
+        if (this.visualMesh.children[i].name === 'AlienRider') {
+          this.visualMesh.remove(this.visualMesh.children[i]);
+        }
+      }
+    }
+    if (this.scene) {
+      for (let i = this.scene.children.length - 1; i >= 0; i--) {
+        if (this.scene.children[i].name === 'AlienRider') {
+          this.scene.remove(this.scene.children[i]);
+        }
+      }
+    }
+    this.alienGroup = null;
+
     this.alienGroup = new THREE.Group();
     this.alienGroup.name = 'AlienRider';
     // Sit on top of the 0.5-tall cube — top face is at +0.25
@@ -352,9 +369,21 @@ export class PlayerController {
     // Compute world position of alienGroup before reparenting
     const worldPos = new THREE.Vector3();
     this.alienGroup.getWorldPosition(worldPos);
-    this.visualMesh.remove(this.alienGroup);
+
+    if (this.alienGroup.parent) {
+      this.alienGroup.parent.remove(this.alienGroup);
+    }
     this.scene.add(this.alienGroup);
     this.alienGroup.position.copy(worldPos);
+
+    // Thoroughly remove any remaining AlienRider children from visualMesh
+    if (this.visualMesh) {
+      for (let i = this.visualMesh.children.length - 1; i >= 0; i--) {
+        if (this.visualMesh.children[i].name === 'AlienRider') {
+          this.visualMesh.remove(this.visualMesh.children[i]);
+        }
+      }
+    }
 
     // ── Launch velocity: up + slight forward + random left/right ──────────────
     const lateralSign = Math.random() > 0.5 ? 1 : -1;

@@ -82,6 +82,7 @@ export class Game {
     if (!this.renderer || !this.renderer.sceneFactory) return;
 
     this.shardsCollected = 0;
+    this._isHandlingCollision = false;
     this.scoreSystem.reset();
 
     // Reset world and player (preserve manually selected debug tier if any)
@@ -258,6 +259,9 @@ export class Game {
               this._checkTutorialAdvance('SHARD');
               logger.info(`Collected Energy Shard! Total: ${this.scoreSystem.shardsCount}`);
             } else if (currentState === STATES.RUNNING) {
+              if (this._isHandlingCollision) return;
+              this._isHandlingCollision = true;
+
               // Terminal collision (wall or gap)
               audioManager.playCollision();
               this.renderer.sceneFactory.triggerCameraShake(0.4);
@@ -268,6 +272,7 @@ export class Game {
 
               // Short delay so the fly-off is visible before UI switch
               setTimeout(() => {
+                this._isHandlingCollision = false;
                 this.stateMachine.transitionTo(STATES.GAME_OVER, {
                   reason: hitResult.type === 'gap' ? 'Floor Gap Fall' : 'Obstacle Impact'
                 });
