@@ -225,6 +225,17 @@ export class Game {
 
     // Active gameplay collision & scoring check (RUNNING or TUTORIAL)
     const currentState = this.stateMachine.getState();
+    const isGameplayActive = (currentState === STATES.RUNNING || currentState === STATES.TUTORIAL) && !this._isHandlingCollision;
+
+    // 🏎️ Update Cyberpunk Hoverbike engine hum sound dynamically with speed
+    if (this.renderer && this.renderer.sceneFactory && this.renderer.sceneFactory.tunnelManager) {
+      const currentSpeed = this.renderer.sceneFactory.tunnelManager.speed || 15;
+      const speedRatio = currentSpeed / 15.0;
+      audioManager.updateEngine(speedRatio, isGameplayActive);
+    } else {
+      audioManager.updateEngine(1.0, false);
+    }
+
     if (currentState === STATES.TUTORIAL) {
       this.tutorialManager.update(delta);
       this._updateTutorialPrompt();

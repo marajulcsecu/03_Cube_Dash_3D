@@ -115,6 +115,115 @@ export class AudioManager {
     } catch (e) {}
   }
 
+  // ── Cyberpunk Vehicle Engine Sound Synthesizer ─────────────────────────────────
+  startEngine() {
+    if (!this._canPlay() || this.engineRunning) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      this.engineRunning = true;
+
+      // 1. Sub-bass growl oscillator (sawtooth for rich harmonics)
+      this.engineOsc = this.ctx.createOscillator();
+      this.engineOsc.type = 'sawtooth';
+      this.engineOsc.frequency.setValueAtTime(65, now);
+
+      // 2. High-resonance Sci-Fi lowpass filter (Tron / Cyberpunk turbine hum)
+      this.engineFilter = this.ctx.createBiquadFilter();
+      this.engineFilter.type = 'lowpass';
+      this.engineFilter.frequency.setValueAtTime(320, now);
+      this.engineFilter.Q.setValueAtTime(5.0, now); // High Q gives sci-fi whistle/hum
+
+      // 3. Sub-oscillator for deep bass rumble (sine at octave down)
+      this.subOsc = this.ctx.createOscillator();
+      this.subOsc.type = 'sine';
+      this.subOsc.frequency.setValueAtTime(32.5, now);
+
+      // 4. LFO for engine pulse modulation
+      this.engineLFO = this.ctx.createOscillator();
+      this.engineLFO.type = 'sine';
+      this.engineLFO.frequency.setValueAtTime(14, now); // 14 Hz pulsing rumble
+
+      this.lfoGain = this.ctx.createGain();
+      this.lfoGain.gain.setValueAtTime(15, now);
+      this.engineLFO.connect(this.lfoGain.gain);
+
+      // 5. Main Engine Master Gain Node
+      this.engineGain = this.ctx.createGain();
+      this.engineGain.gain.setValueAtTime(0.001, now);
+      this.engineGain.gain.linearRampToValueAtTime(this.volume * 0.18, now + 0.3);
+
+      // Signal routing: Osc -> Filter -> Master Gain -> Audio Destination
+      this.engineOsc.connect(this.engineFilter);
+      this.subOsc.connect(this.engineFilter);
+      this.engineFilter.connect(this.engineGain);
+      this.engineGain.connect(this.ctx.destination);
+
+      this.engineOsc.start(now);
+      this.subOsc.start(now);
+      this.engineLFO.start(now);
+    } catch (e) {
+      this.engineRunning = false;
+    }
+  }
+
+  stopEngine() {
+    if (!this.engineRunning || !this.ctx) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      if (this.engineGain) {
+        this.engineGain.gain.linearRampToValueAtTime(0.001, now + 0.2);
+      }
+      setTimeout(() => {
+        try {
+          if (this.engineOsc) { this.engineOsc.stop(); this.engineOsc.disconnect(); }
+          if (this.subOsc) { this.subOsc.stop(); this.subOsc.disconnect(); }
+          if (this.engineLFO) { this.engineLFO.stop(); this.engineLFO.disconnect(); }
+          if (this.engineFilter) this.engineFilter.disconnect();
+          if (this.engineGain) this.engineGain.disconnect();
+        } catch (e) {}
+        this.engineRunning = false;
+      }, 220);
+    } catch (e) {
+      this.engineRunning = false;
+    }
+  }
+
+  updateEngine(speedRatio = 1.0, active = true) {
+    if (this.muted || !active) {
+      if (this.engineRunning) this.stopEngine();
+      return;
+    }
+
+    if (!this.engineRunning) {
+      this.startEngine();
+      return;
+    }
+
+    if (!this.ctx || !this.engineOsc || !this.engineFilter) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const clampedRatio = Math.max(0.5, Math.min(2.5, speedRatio));
+
+      // Pitch sweeps up with vehicle speed (65Hz up to 160Hz)
+      const baseFreq = 65 * clampedRatio;
+      this.engineOsc.frequency.setTargetAtTime(baseFreq, now, 0.1);
+      this.subOsc.frequency.setTargetAtTime(baseFreq * 0.5, now, 0.1);
+
+      // Sci-fi turbine filter cutoff opens up as vehicle accelerates (320Hz up to 1400Hz)
+      const filterCutoff = 320 + (clampedRatio - 0.5) * 600;
+      this.engineFilter.frequency.setTargetAtTime(filterCutoff, now, 0.1);
+
+      // Volume adjusts slightly with speed
+      if (this.engineGain) {
+        const targetVol = this.volume * (0.15 + (clampedRatio - 0.5) * 0.08);
+        this.engineGain.gain.setTargetAtTime(targetVol, now, 0.1);
+      }
+    } catch (e) {}
+  }
+
   _canPlay() {
     return this.initialized && this.ctx && !this.muted && this.ctx.state === 'running';
   }
