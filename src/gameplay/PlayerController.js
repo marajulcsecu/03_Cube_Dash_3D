@@ -41,6 +41,13 @@ export class PlayerController {
     this.targetScale = new THREE.Vector3(1, 1, 1);
     this.currentScale = new THREE.Vector3(1, 1, 1);
 
+    // Fly-off death animation
+    this._flyOffActive  = false;
+    this._flyOffVel     = new THREE.Vector3();
+    this._flyOffAngVel  = new THREE.Vector3();
+    this._flyOffTimer   = 0;
+    this._flyOffDuration = 1.6; // seconds until alien fully gone
+
     this._buildMesh();
   }
 
@@ -316,6 +323,10 @@ export class PlayerController {
   }
 
   update(delta) {
+    if (this._flyOffActive) {
+      this._updateFlyOff(delta);
+      return; // freeze cube movement during death
+    }
     this._updateLaneMovement(delta);
     this._updateJumpPhysics(delta);
     this._updateVisualDeformation(delta);
@@ -324,6 +335,81 @@ export class PlayerController {
     // Sync 3D mesh position with logical (currentX, y, 2.0)
     this.meshGroup.position.x = this.currentX;
     this.meshGroup.position.y = this.y;
+  }
+
+  /**
+   * Trigger fly-off death animation.
+   * Detaches alienGroup from visualMesh into world space,
+   * launches it with upward + randomised lateral velocity,
+   * applies rapid tumble spin, and fades it out over ~1.6s.
+   */
+  triggerFlyOff() {
+    if (this._flyOffActive || !this.alienGroup) return;
+    this._flyOffActive = true;
+    this._flyOffTimer  = 0;
+
+    // ── Detach alien from cube: reparent to scene in world space ──────────────
+    // Compute world position of alienGroup before reparenting
+    const worldPos = new THREE.Vector3();
+    this.alienGroup.getWorldPosition(worldPos);
+    this.visualMesh.remove(this.alienGroup);
+    this.scene.add(this.alienGroup);
+    this.alienGroup.position.copy(worldPos);
+
+    // ── Launch velocity: up + slight forward + random left/right ──────────────
+    const lateralSign = Math.random() > 0.5 ? 1 : -1;
+    this._flyOffVel.set(
+      lateralSign * (1.8 + Math.random() * 1.4),  // X: random side
+      5.5 + Math.random() * 1.5,                   // Y: strong upward
+      -(1.0 + Math.random() * 0.8)                 // Z: fly toward camera
+    );
+
+    // ── Tumble angular velocity (random axis) ─────────────────────────────────
+    this._flyOffAngVel.set(
+      (Math.random() - 0.5) * 18,
+      (Math.random() - 0.5) * 14,
+      (Math.random() - 0.5) * 16
+    );
+  }
+
+  _updateFlyOff(delta) {
+    if (!this._flyOffActive || !this.alienGroup) return;
+
+    this._flyOffTimer += delta;
+    const t = this._flyOffTimer;
+
+    // Gravity pulls alien down
+    this._flyOffVel.y -= 18 * delta;
+
+    // Move alien
+    this.alienGroup.position.x += this._flyOffVel.x * delta;
+    this.alienGroup.position.y += this._flyOffVel.y * delta;
+    this.alienGroup.position.z += this._flyOffVel.z * delta;
+
+    // Tumble spin
+    this.alienGroup.rotation.x += this._flyOffAngVel.x * delta;
+    this.alienGroup.rotation.y += this._flyOffAngVel.y * delta;
+    this.alienGroup.rotation.z += this._flyOffAngVel.z * delta;
+
+    // Fade out all meshes (opacity ramps down after halfway)
+    const fadeStart = this._flyOffDuration * 0.45;
+    if (t > fadeStart) {
+      const fadeProgress = Math.min(1, (t - fadeStart) / (this._flyOffDuration - fadeStart));
+      const opacity = 1 - fadeProgress;
+      this.alienGroup.traverse(obj => {
+        if (obj.isMesh && obj.material) {
+          obj.material.transparent = true;
+          obj.material.opacity = opacity;
+        }
+      });
+    }
+
+    // Remove alien from scene when animation completes
+    if (t >= this._flyOffDuration) {
+      this.scene.remove(this.alienGroup);
+      this.alienGroup = null;
+      this._flyOffActive = false;
+    }
   }
 
   _updateLaneMovement(delta) {
@@ -376,6 +462,14 @@ export class PlayerController {
   }
 
   reset() {
+    // Cancel any active fly-off
+    if (this._flyOffActive && this.alienGroup) {
+      this.scene.remove(this.alienGroup);
+    }
+    this._flyOffActive = false;
+    this._flyOffTimer  = 0;
+    this.alienGroup    = null;
+
     this.currentLane = 2;
     this.targetLane = 2;
     this.currentX = 0.0;
@@ -392,6 +486,9 @@ export class PlayerController {
       this.visualMesh.scale.set(1, 1, 1);
     }
     this.meshGroup.position.set(0, this.groundY, 2.0);
+
+    // Rebuild the alien rider fresh for next run
+    this._buildAlienRider();
   }
 
   get position() {

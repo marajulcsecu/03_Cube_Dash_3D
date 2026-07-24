@@ -262,9 +262,16 @@ export class Game {
               audioManager.playCollision();
               this.renderer.sceneFactory.triggerCameraShake(0.4);
               logger.info(`Terminal Collision: ${hitResult.type}`);
-              this.stateMachine.transitionTo(STATES.GAME_OVER, {
-                reason: hitResult.type === 'gap' ? 'Floor Gap Fall' : 'Obstacle Impact'
-              });
+
+              // 🚀 Launch alien off the cube before showing game-over screen
+              player.triggerFlyOff();
+
+              // Short delay so the fly-off is visible before UI switch
+              setTimeout(() => {
+                this.stateMachine.transitionTo(STATES.GAME_OVER, {
+                  reason: hitResult.type === 'gap' ? 'Floor Gap Fall' : 'Obstacle Impact'
+                });
+              }, 320);
             } else {
               // Safe non-terminal collision during tutorial
               audioManager.playCollision();
