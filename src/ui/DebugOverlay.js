@@ -1,0 +1,101 @@
+/**
+ * Optional Debug Overlay & Diagnostics UI
+ */
+
+export class DebugOverlay {
+  constructor(container, game) {
+    this.container = container;
+    this.game = game;
+    this.overlayEl = null;
+    this.statsEl = null;
+    this.visible = false;
+    this.fpsCounter = 0;
+    this.lastFpsUpdate = 0;
+    this.currentFps = 60;
+
+    this.init();
+  }
+
+  init() {
+    this.overlayEl = document.createElement('div');
+    this.overlayEl.id = 'debug-overlay';
+    this.overlayEl.className = 'interactive';
+    this.overlayEl.style.cssText = `
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(0, 243, 255, 0.4);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #00f3ff;
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      display: none;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      max-width: 280px;
+    `;
+
+    this.overlayEl.innerHTML = `
+      <div style="font-weight: bold; border-bottom: 1px solid rgba(0, 243, 255, 0.2); padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between;">
+        <span>DIAGNOSTICS PANEL</span>
+        <span id="debug-close-btn" style="cursor: pointer;">[X]</span>
+      </div>
+      <div id="debug-stats-content">Initializing stats...</div>
+      <div style="margin-top: 8px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 6px; display: flex; gap: 6px; flex-wrap: wrap;">
+        <button id="debug-trigger-error-btn" style="background: #ff3366; color: #fff; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer;">Test Fatal Error</button>
+      </div>
+    `;
+
+    this.container.appendChild(this.overlayEl);
+    this.statsEl = this.overlayEl.querySelector('#debug-stats-content');
+
+    this.overlayEl.querySelector('#debug-close-btn').addEventListener('click', () => this.hide());
+    this.overlayEl.querySelector('#debug-trigger-error-btn').addEventListener('click', () => {
+      this.game.triggerFatalError('User initiated test error via Diagnostics Panel.');
+    });
+  }
+
+  show() {
+    this.visible = true;
+    if (this.overlayEl) this.overlayEl.style.display = 'block';
+  }
+
+  hide() {
+    this.visible = false;
+    if (this.overlayEl) this.overlayEl.style.display = 'none';
+  }
+
+  toggle() {
+    if (this.visible) this.hide();
+    else this.show();
+  }
+
+  update(clock, stateMachine) {
+    if (!this.visible) return;
+
+    // Simple FPS calculation
+    const now = performance.now();
+    this.fpsCounter++;
+    if (now - this.lastFpsUpdate >= 500) {
+      this.currentFps = Math.round((this.fpsCounter * 1000) / (now - this.lastFpsUpdate));
+      this.fpsCounter = 0;
+      this.lastFpsUpdate = now;
+    }
+
+    const state = stateMachine ? stateMachine.getState() : 'N/A';
+    const delta = clock ? (clock.deltaSeconds * 1000).toFixed(1) : 0;
+    const elapsed = clock ? clock.elapsedSeconds.toFixed(1) : 0;
+    const dpr = window.devicePixelRatio || 1;
+    const viewport = `${window.innerWidth}x${window.innerHeight}`;
+
+    this.statsEl.innerHTML = `
+      <div><strong>State:</strong> <span style="color: #fff;">${state}</span></div>
+      <div><strong>FPS:</strong> ${this.currentFps} FPS | <strong>Delta:</strong> ${delta}ms</div>
+      <div><strong>Elapsed:</strong> ${elapsed}s</div>
+      <div><strong>Viewport:</strong> ${viewport} | <strong>DPR:</strong> ${dpr}</div>
+    `;
+  }
+}

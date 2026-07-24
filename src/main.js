@@ -1,41 +1,42 @@
 /**
  * Cube Dash 3D - Entry Point
- * Offline-first mobile 3D tunnel runner for MegaGameBox.
+ * Bootstraps Game Architecture & State Machine.
  */
 
-console.log('[Cube Dash 3D] Initializing repository foundation...');
+import { Game } from './core/Game.js';
+import { logger } from './services/Logger.js';
+
+let gameInstance = null;
 
 window.addEventListener('DOMContentLoaded', () => {
-  const bootShell = document.getElementById('boot-shell');
-  
-  // Verify DOM & canvas setup
-  const canvas = document.getElementById('game-canvas');
-  if (!canvas) {
-    console.error('[Cube Dash 3D] Canvas element missing!');
-    showFatalError('Failed to initialize game canvas target.');
-    return;
-  }
+  logger.info('DOM loaded. Initializing Game Core Architecture...');
 
-  // Foundation boot status update
-  const bootStatus = document.getElementById('boot-status');
-  setTimeout(() => {
-    if (bootStatus) {
-      bootStatus.textContent = 'Foundation Scaffolding Ready • Awaiting State Machine';
+  try {
+    gameInstance = new Game({ debug: true });
+    gameInstance.init(document.getElementById('app-container'));
+    gameInstance.startLoop();
+
+    // Wire up menu interactions for test verification
+    document.getElementById('menu-play-btn')?.addEventListener('click', () => {
+      alert('Play triggered! Gameplay scene rendering will be added in Step 3-6.');
+    });
+
+    document.getElementById('menu-debug-btn')?.addEventListener('click', () => {
+      if (gameInstance && gameInstance.debugOverlay) {
+        gameInstance.debugOverlay.toggle();
+      }
+    });
+
+    document.getElementById('menu-error-test-btn')?.addEventListener('click', () => {
+      if (gameInstance) {
+        gameInstance.triggerFatalError('Simulated test failure triggered via Menu.');
+      }
+    });
+
+  } catch (err) {
+    logger.error('Uncaught error during initialization:', { error: err.message });
+    if (gameInstance) {
+      gameInstance.triggerFatalError(err.message);
     }
-    console.log('[Cube Dash 3D] Foundation boot complete.');
-  }, 800);
-});
-
-function showFatalError(msg) {
-  const bootShell = document.getElementById('boot-shell');
-  const errorShell = document.getElementById('error-shell');
-  const errorMsg = document.getElementById('error-message');
-  
-  if (bootShell) bootShell.style.display = 'none';
-  if (errorShell) errorShell.style.display = 'flex';
-  if (errorMsg) errorMsg.textContent = msg;
-}
-
-document.getElementById('error-retry-btn')?.addEventListener('click', () => {
-  window.location.reload();
+  }
 });
