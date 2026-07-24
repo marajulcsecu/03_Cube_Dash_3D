@@ -270,13 +270,13 @@ export class Game {
               // 🚀 Launch alien off the cube before showing game-over screen
               player.triggerFlyOff();
 
-              // Short delay so the fly-off is visible before UI switch
+              // Allow full fly-off animation to play (~1.2s) before showing Game Over modal
               setTimeout(() => {
                 this._isHandlingCollision = false;
                 this.stateMachine.transitionTo(STATES.GAME_OVER, {
                   reason: hitResult.type === 'gap' ? 'Floor Gap Fall' : 'Obstacle Impact'
                 });
-              }, 320);
+              }, 1200);
             } else {
               // Safe non-terminal collision during tutorial
               audioManager.playCollision();
