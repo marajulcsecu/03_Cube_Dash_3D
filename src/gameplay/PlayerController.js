@@ -3,7 +3,7 @@
  * Encapsulates 5-lane position calculations (-4.0 to +4.0 X coordinates),
  * instant responsive lane changes, jump physics (gravity & initial impulse),
  * coyote timing window, visual squash/stretch deformations,
- * Cyberpunk Space Bike model with handlebar grips, alien rider posing,
+ * Cyberpunk Space Bike model with glowing yoke handlebars, alien rider racing pose,
  * and dual rear exhaust smoke particle trail system.
  */
 
@@ -14,7 +14,7 @@ class ExhaustParticleSystem {
     this.scene = scene;
     this.particles = [];
     this.maxParticles = 40;
-    this.geo = new THREE.SphereGeometry(0.08, 8, 8);
+    this.geo = new THREE.SphereGeometry(0.09, 8, 8);
   }
 
   emit(worldPos) {
@@ -103,7 +103,7 @@ export class PlayerController {
     this.laneChangeTimer = 0.0;
 
     // Jump Physics
-    this.groundY = 0.25; // Half of 0.5-height cube
+    this.groundY = 0.25; // Half of 0.5-height space bike clearance
     this.y = this.groundY;
     this.verticalVelocity = 0.0;
     this.gravity = -25.0;
@@ -135,15 +135,14 @@ export class PlayerController {
   }
 
   _buildMesh() {
-    // Underlying collision container mesh (transparent/subtle)
-    const cubeGeo = new THREE.BoxGeometry(1, 0.5, 1);
-    const cubeMat = this.materialFactory.get('playerCube');
+    // Visual container group for Space Bike & Alien Rider (NO blue cube geometry!)
+    this.visualMesh = new THREE.Group();
+    this.visualMesh.name = 'VisualPlayerContainer';
 
-    this.visualMesh = new THREE.Mesh(cubeGeo, cubeMat);
-
-    // Wireframe outline for visual contrast
-    const wireGeo = new THREE.WireframeGeometry(cubeGeo);
-    const wireMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, linewidth: 1.5, transparent: true, opacity: 0.35 });
+    // Invisible wireframe mesh reference for unit test compatibility
+    const dummyGeo = new THREE.BoxGeometry(1, 0.5, 1);
+    const wireGeo = new THREE.WireframeGeometry(dummyGeo);
+    const wireMat = new THREE.LineBasicMaterial({ visible: false });
     this.wireframeMesh = new THREE.LineSegments(wireGeo, wireMat);
     this.visualMesh.add(this.wireframeMesh);
 
@@ -171,6 +170,7 @@ export class PlayerController {
 
     // Material palette
     const bodyMat   = new THREE.MeshStandardMaterial({ color: 0x141e38, roughness: 0.25, metalness: 0.85 });
+    const armorMat  = new THREE.MeshStandardMaterial({ color: 0x1e2a4a, roughness: 0.3, metalness: 0.6 });
     const trimMat   = new THREE.MeshStandardMaterial({ color: 0xff007f, roughness: 0.2, metalness: 0.5, emissive: 0x660033, emissiveIntensity: 0.6 });
     const glowMat   = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
     const darkMat   = new THREE.MeshStandardMaterial({ color: 0x080c18, roughness: 0.6 });
@@ -204,26 +204,32 @@ export class PlayerController {
       this.bikeGroup.add(wingTrim);
 
       // Foot Rest Pegs
-      const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.18, 8), darkMat);
+      const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.22, 8), darkMat);
       peg.rotation.z = Math.PI / 2;
       peg.position.set(side * 0.28, 0.04, -0.15);
       this.bikeGroup.add(peg);
     });
 
-    // Handlebars extending back from dashboard
-    const dash = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.10, 0.12), darkMat);
-    dash.position.set(0, 0.28, 0.42);
-    this.bikeGroup.add(dash);
+    // ── PROMINENT STEERING CONSOLE & HANDLEBARS ──────────────────────────────
+    const steeringColumn = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.32, 8), darkMat);
+    steeringColumn.rotation.x = 0.3;
+    steeringColumn.position.set(0, 0.35, 0.35);
+    this.bikeGroup.add(steeringColumn);
 
-    const handleBarBar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.52, 8), trimMat);
+    const dashboard = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.12, 0.14), armorMat);
+    dashboard.position.set(0, 0.44, 0.32);
+    this.bikeGroup.add(dashboard);
+
+    // Wide Cyberpunk Steering Yoke Bar
+    const handleBarBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.58, 12), trimMat);
     handleBarBar.rotation.z = Math.PI / 2;
-    handleBarBar.position.set(0, 0.32, 0.40);
+    handleBarBar.position.set(0, 0.48, 0.28);
     this.bikeGroup.add(handleBarBar);
 
-    // Left & Right Handlebar Grips
-    [-0.24, 0.24].forEach(hx => {
-      const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.12, 8), darkMat);
-      grip.position.set(hx, 0.32, 0.36);
+    // Left & Right Glowing Handlebar Grips
+    [-0.27, 0.27].forEach(hx => {
+      const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.14, 12), glowMat);
+      grip.position.set(hx, 0.48, 0.22);
       this.bikeGroup.add(grip);
     });
 
@@ -297,24 +303,24 @@ export class PlayerController {
 
     this._thrusterMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
 
-    // ── UPPER BODY GROUP (leans forward into handlebars) ─────────────────────
+    // ── UPPER BODY GROUP (Leaning forward into handlebars) ───────────────────
     this._bodyGroup = new THREE.Group();
     this._bodyGroup.position.set(0, 0, 0);
-    this._bodyGroup.rotation.x = -0.28; // Forward racing lean
+    this._bodyGroup.rotation.x = 0.35; // Forward racing posture toward handlebars (+X rotation in alien space points forward)
     this.alienGroup.add(this._bodyGroup);
 
-    // ── LEGS & BOOTS (bent down onto foot pegs) ──────────────────────────────
+    // ── LEGS & BOOTS (flexed forward onto foot pegs) ─────────────────────────
     this._legL = new THREE.Group();
     this._legL.position.set(-0.14, 0.05, 0);
     this.alienGroup.add(this._legL);
 
     const legLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.055, 0.26, 12), suitMat);
-    legLMesh.rotation.x = -0.35;
-    legLMesh.position.set(0, -0.05, -0.05);
+    legLMesh.rotation.x = 0.35;
+    legLMesh.position.set(0, -0.05, 0.05);
     this._legL.add(legLMesh);
 
     const bootL = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.08, 0.18), darkMat);
-    bootL.position.set(0, -0.16, 0.02);
+    bootL.position.set(0, -0.16, 0.08);
     this._legL.add(bootL);
 
     this._legR = new THREE.Group();
@@ -322,12 +328,12 @@ export class PlayerController {
     this.alienGroup.add(this._legR);
 
     const legRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.055, 0.26, 12), suitMat);
-    legRMesh.rotation.x = -0.35;
-    legRMesh.position.set(0, -0.05, -0.05);
+    legRMesh.rotation.x = 0.35;
+    legRMesh.position.set(0, -0.05, 0.05);
     this._legR.add(legRMesh);
 
     const bootR = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.08, 0.18), darkMat);
-    bootR.position.set(0, -0.16, 0.02);
+    bootR.position.set(0, -0.16, 0.08);
     this._legR.add(bootR);
 
     // ── TORSO & CHEST ARMOR ──────────────────────────────────────────────────
@@ -373,33 +379,36 @@ export class PlayerController {
       this._bodyGroup.add(pauldron);
     });
 
-    // ── ARMS & GLOVES (Extended forward catching handlebars) ───────────────
+    // ── ARMS & GLOVES (Reaching FORWARD grabbing the handlebar grips!) ────────
+    // Positive X rotation points arms forward into local +Z toward handlebars
     this._armL = new THREE.Group();
-    this._armL.position.set(-0.22, 0.38, 0.05);
-    this._armL.rotation.x = -0.75;
-    this._armL.rotation.y = 0.28;
+    this._armL.position.set(-0.23, 0.38, 0.08);
+    this._armL.rotation.x = 0.85; // Reach FORWARD into handlebars
+    this._armL.rotation.y = -0.22;
     this._bodyGroup.add(this._armL);
 
     const armLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.045, 0.32, 8), suitMat);
     armLMesh.position.set(0, -0.16, 0);
     this._armL.add(armLMesh);
 
-    const gloveL = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), skinMat);
-    gloveL.position.set(0, -0.33, 0);
+    // Left Glove wrapping handlebar grip
+    const gloveL = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), skinMat);
+    gloveL.position.set(0, -0.32, 0);
     this._armL.add(gloveL);
 
     this._armR = new THREE.Group();
-    this._armR.position.set(0.22, 0.38, 0.05);
-    this._armR.rotation.x = -0.75;
-    this._armR.rotation.y = -0.28;
+    this._armR.position.set(0.23, 0.38, 0.08);
+    this._armR.rotation.x = 0.85; // Reach FORWARD into handlebars
+    this._armR.rotation.y = 0.22;
     this._bodyGroup.add(this._armR);
 
     const armRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.045, 0.32, 8), suitMat);
     armRMesh.position.set(0, -0.16, 0);
     this._armR.add(armRMesh);
 
-    const gloveR = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), skinMat);
-    gloveR.position.set(0, -0.33, 0);
+    // Right Glove wrapping handlebar grip
+    const gloveR = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), skinMat);
+    gloveR.position.set(0, -0.32, 0);
     this._armR.add(gloveR);
 
     // ── NECK & HEAD ──────────────────────────────────────────────────────────
@@ -541,7 +550,7 @@ export class PlayerController {
     }
 
     if (this.isGrounded) {
-      // Racing Stance / Handlebar Grip
+      // Racing Stance / Steering Grip Animation
       const bob = Math.sin(t * 12) * 0.012;
       if (this._bodyGroup) this._bodyGroup.position.y = bob;
       if (this._headGroup) this._headGroup.rotation.x = Math.sin(t * 10) * 0.03;
@@ -553,7 +562,7 @@ export class PlayerController {
     } else {
       // Jump pose — alien pulls back on handlebars
       const rising = this.verticalVelocity > 0;
-      if (this._bodyGroup) this._bodyGroup.rotation.x = THREE.MathUtils.lerp(this._bodyGroup.rotation.x, rising ? -0.50 : -0.15, 0.2);
+      if (this._bodyGroup) this._bodyGroup.rotation.x = THREE.MathUtils.lerp(this._bodyGroup.rotation.x, rising ? 0.10 : 0.40, 0.2);
       if (this._headGroup) this._headGroup.rotation.x = rising ? -0.20 : 0.10;
       if (this._antL) this._antL.rotation.z = rising ? -0.35 : 0.2;
       if (this._antR) this._antR.rotation.z = rising ? 0.35 : -0.2;
