@@ -9,6 +9,12 @@ import { MaterialFactory } from './Materials.js';
 import { TunnelManager } from '../world/TunnelManager.js';
 import { PlayerController } from '../gameplay/PlayerController.js';
 
+export const CAMERA_MODES = {
+  THIRD_PERSON: '3RD',
+  FIRST_PERSON: '1ST',
+  HOOD: 'HOOD'
+};
+
 export class SceneFactory {
   constructor() {
     this.scene = new THREE.Scene();
@@ -18,7 +24,8 @@ export class SceneFactory {
     this.tunnelManager = null;
     this.playerController = null;
 
-    // Camera Juicing & Motion State
+    // Camera Juicing, Modes & Motion State
+    this.cameraMode = CAMERA_MODES.THIRD_PERSON;
     this.baseFov = 70;
     this.targetFov = 70;
     this.cameraShakeIntensity = 0;
@@ -35,8 +42,8 @@ export class SceneFactory {
     // Camera
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(70, aspect, 0.1, 200);
-    this.camera.position.set(0, 2.8, 6.5);
-    this.camera.lookAt(0, 1.0, -30);
+    this.camera.position.set(0, 2.3, 5.2);
+    this.camera.lookAt(0, 0.8, -30);
 
     // Ambient Lighting
     const ambientLight = new THREE.AmbientLight(0x1a2035, 1.2);
@@ -58,6 +65,20 @@ export class SceneFactory {
     // Build pooled endless tunnel manager & player controller
     this.tunnelManager = new TunnelManager(this.scene, this.materialFactory, 42);
     this.playerController = new PlayerController(this.scene, this.materialFactory);
+  }
+
+  cycleCameraMode() {
+    const modes = [CAMERA_MODES.THIRD_PERSON, CAMERA_MODES.FIRST_PERSON, CAMERA_MODES.HOOD];
+    const currentIndex = modes.indexOf(this.cameraMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    this.cameraMode = modes[nextIndex];
+    return this.cameraMode;
+  }
+
+  setCameraMode(mode) {
+    if (Object.values(CAMERA_MODES).includes(mode)) {
+      this.cameraMode = mode;
+    }
   }
 
   triggerCameraShake(intensity = 0.3) {
@@ -84,39 +105,91 @@ export class SceneFactory {
 
     const currentSpeed = this.tunnelManager?.difficultyDirector?.currentSpeed || 20;
     const playerX = this.playerController?.position.x || 0;
-    const playerY = this.playerController?.position.y || 0.5;
+    const playerY = this.playerController?.position.y || 0.25;
 
     const aspect = this.camera.aspect || (window.innerWidth / window.innerHeight);
-
-    // Responsive aspect ratio adjustment for mobile portrait viewports
-    // When aspect < 1.6 (portrait mobile/tablet), pull camera back & scale FOV to keep outer lanes visible
     const portraitFactor = Math.max(0, Math.min(1.0, (1.6 - aspect) / 1.15));
-    const baseCamZ = 6.5 + portraitFactor * 4.5;
-    const baseCamY = 2.8 + portraitFactor * 1.5;
+
+    // Handle First-Person Rider Visibility
+    if (this.playerController) {
+      const isFirstPerson = this.cameraMode === CAMERA_MODES.FIRST_PERSON;
+      if (this.playerController.alienGroup) {
+        this.playerController.alienGroup.visible = !isFirstPerson;
+      }
+    }
+
+    let targetCamX = 0;
+    let targetCamY = 2.3;
+    let targetCamZ = 5.2;
+    let lookTargetX = playerX * 0.08;
+    let lookTargetY = 0.8;
+    let lookTargetZ = -30;
+    let desiredFov = 70;
+
+    const speedRatio = Math.min(1.0, Math.max(0, (currentSpeed - 15) / 15));
+
+    switch (this.cameraMode) {
+      case CAMERA_MODES.FIRST_PERSON:
+        // ── 1ST PERSON / ALIEN EYE COCKPIT VIEW ──────────────────────────────
+        // Camera sits inside alien helmet looking down tunnel through visor
+        targetCamX = playerX;
+        targetCamY = playerY + 0.65; // Alien Eye Height
+        targetCamZ = 1.90;          // Cockpit / Handlebars level
+        lookTargetX = playerX;
+        lookTargetY = playerY + 0.60;
+        lookTargetZ = -50;
+        desiredFov = 82 + speedRatio * 10;
+        break;
+
+      case CAMERA_MODES.HOOD:
+        // ── HOOD / THRUST CAM ────────────────────────────────────────────────
+        // Low-angle tight camera right behind exhaust thrusters
+        targetCamX = playerX * 0.3;
+        targetCamY = playerY + 0.75;
+        targetCamZ = 3.6;
+        lookTargetX = playerX * 0.1;
+        lookTargetY = 0.9;
+        lookTargetZ = -35;
+        desiredFov = 74 + speedRatio * 8;
+        break;
+
+      case CAMERA_MODES.THIRD_PERSON:
+      default:
+        // ── 3RD PERSON CHASE CAM (PUNCHY & PROMINENT IN PORTRAIT) ────────────
+        // Keeps bike nice & large in portrait mode (base 5.2 Z + max 1.0)
+        const baseCamZ = 5.2 + portraitFactor * 1.0;
+        const baseCamY = 2.3 + portraitFactor * 0.4;
+        const swayScale = 0.25 * (1.0 - portraitFactor * 0.3);
+
+        targetCamX = playerX * swayScale;
+        targetCamY = baseCamY + (playerY - 0.25) * 0.15;
+        targetCamZ = baseCamZ;
+        lookTargetX = playerX * 0.08;
+        lookTargetY = 0.8;
+        lookTargetZ = -30;
+        desiredFov = 70 + speedRatio * 8.0 + portraitFactor * 6.0;
+        break;
+    }
 
     if (this.reducedMotion) {
-      this.camera.position.set(0, baseCamY, baseCamZ);
-      this.camera.fov = 70 + portraitFactor * 18.0;
+      this.camera.position.set(targetCamX, targetCamY, targetCamZ);
+      this.camera.fov = desiredFov;
       this.camera.updateProjectionMatrix();
+      this.camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
       return;
     }
 
-    // 1. Dynamic Speed FOV Scaling (70 -> 78 degrees base, plus portrait adaptation)
-    const speedRatio = Math.min(1.0, (currentSpeed - 15) / 15);
-    this.targetFov = (70 + speedRatio * 8.0) + (portraitFactor * 18.0);
-    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, delta * 3.0);
+    // Dynamic Speed FOV Scaling
+    this.targetFov = desiredFov;
+    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, delta * 4.0);
     this.camera.updateProjectionMatrix();
 
-    // 2. Damped Camera X Sway following player lane (sway scaled down on tight portrait screens)
-    const swayScale = 0.2 * (1.0 - portraitFactor * 0.5);
-    const targetCamX = playerX * swayScale;
-    const targetCamY = baseCamY + (playerY - 0.5) * 0.15;
+    // Damped Camera Position Movement
+    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 8.0);
+    this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 8.0);
+    this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1.0, delta * 8.0);
 
-    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 6.0);
-    this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 6.0);
-    this.camera.position.z += (baseCamZ - this.camera.position.z) * Math.min(1.0, delta * 6.0);
-
-    // 3. Capped Camera Shake Decay
+    // Impact Camera Shake
     if (this.cameraShakeIntensity > 0) {
       const shakeX = (Math.random() - 0.5) * this.cameraShakeIntensity;
       const shakeY = (Math.random() - 0.5) * this.cameraShakeIntensity;
@@ -126,7 +199,7 @@ export class SceneFactory {
       this.cameraShakeIntensity = Math.max(0, this.cameraShakeIntensity - delta * 2.0);
     }
 
-    this.camera.lookAt(playerX * 0.05, 1.0, -30);
+    this.camera.lookAt(lookTargetX, lookTargetY, lookTargetZ);
   }
 
   updateAspect(width, height) {

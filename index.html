@@ -24,7 +24,10 @@
 
       <!-- In-Game HUD Shell -->
       <div id="hud-shell" class="hud-shell" style="display: none;">
-        <button id="hud-pause-btn" class="hud-pause-btn">❚❚</button>
+        <div class="hud-left-btns">
+          <button id="hud-pause-btn" class="hud-pause-btn" title="Pause Game">❚❚</button>
+          <button id="hud-cam-btn" class="hud-cam-btn" title="Toggle Camera View (C / V)">📹 <span id="hud-cam-label">3RD</span></button>
+        </div>
         <div class="hud-stats-group">
           <div class="hud-item">
             <span class="hud-label">SCORE</span>

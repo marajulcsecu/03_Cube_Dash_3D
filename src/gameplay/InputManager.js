@@ -135,6 +135,11 @@ export class InputManager {
         e.preventDefault();
         this._emit('JUMP', { source: 'keyboard' });
         break;
+      case 'KeyC':
+      case 'KeyV':
+        e.preventDefault();
+        this._emit('TOGGLE_CAMERA');
+        break;
     }
   }
 

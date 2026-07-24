@@ -103,10 +103,26 @@ export class Game {
     }
   }
 
+  toggleCameraMode() {
+    if (this.renderer && this.renderer.sceneFactory) {
+      const nextMode = this.renderer.sceneFactory.cycleCameraMode();
+      const labelEl = document.getElementById('hud-cam-label');
+      if (labelEl) {
+        labelEl.textContent = nextMode;
+      }
+      logger.info(`Camera Mode changed to: ${nextMode}`);
+    }
+  }
+
   _setupInputListeners() {
     if (!this.inputManager) return;
 
     this.inputManager.onAction((action, payload) => {
+      if (action === 'TOGGLE_CAMERA') {
+        this.toggleCameraMode();
+        return;
+      }
+
       const state = this.stateMachine.getState();
       if (state !== STATES.RUNNING && state !== STATES.TUTORIAL) return;
 

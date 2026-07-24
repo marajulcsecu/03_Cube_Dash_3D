@@ -36,15 +36,31 @@ describe('AudioManager & Camera Language Unit Tests', () => {
     expect(sceneFactory.camera.fov).toBeLessThanOrEqual(78);
   });
 
-  it('should pull back camera position and scale FOV in mobile portrait viewports (400x840)', () => {
+  it('should maintain punchy prominent camera distance in mobile portrait viewports (400x840)', () => {
     // Mobile portrait aspect ratio: 400 / 840 = 0.476
     sceneFactory.camera.aspect = 400 / 840;
     sceneFactory.update(1.0, 1.0);
 
-    // Camera Z should be pulled back from 6.5 to ~11.0
-    expect(sceneFactory.camera.position.z).toBeGreaterThan(10.0);
-    // FOV should expand to maintain horizontal coverage
-    expect(sceneFactory.camera.fov).toBeGreaterThan(80.0);
+    // Camera Z is kept close (5.2 - 6.2) so bike remains large and prominent
+    expect(sceneFactory.camera.position.z).toBeGreaterThanOrEqual(5.0);
+    expect(sceneFactory.camera.position.z).toBeLessThanOrEqual(6.5);
+  });
+
+  it('should support cycling between 3RD, 1ST Cockpit (Alien Eye), and HOOD camera modes', () => {
+    expect(sceneFactory.cameraMode).toBe('3RD');
+
+    // Cycle to 1ST Person (Cockpit Alien Eye View)
+    expect(sceneFactory.cycleCameraMode()).toBe('1ST');
+
+    sceneFactory.update(1.0, 1.0);
+    // Camera moves to alien eye height level
+    expect(sceneFactory.camera.position.z).toBeLessThan(3.0);
+
+    // Cycle to HOOD (Thruster Cam)
+    expect(sceneFactory.cycleCameraMode()).toBe('HOOD');
+
+    // Cycle back to 3RD Person
+    expect(sceneFactory.cycleCameraMode()).toBe('3RD');
   });
 
   it('should trigger and decay camera shake on impact', () => {

@@ -77,6 +77,10 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    document.getElementById('hud-cam-btn')?.addEventListener('click', () => {
+      gameInstance?.toggleCameraMode();
+    });
+
     document.getElementById('pause-resume-btn')?.addEventListener('click', () => {
       if (gameInstance?.stateMachine?.getState() === 'PAUSED') {
         gameInstance.stateMachine.transitionTo('RUNNING');

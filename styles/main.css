@@ -247,6 +247,12 @@ html, body {
   pointer-events: none;
 }
 
+.hud-left-btns {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .hud-pause-btn {
   background: rgba(10, 15, 30, 0.7);
   color: #00f3ff;
@@ -265,6 +271,29 @@ html, body {
 
 .hud-pause-btn:hover {
   background: rgba(0, 243, 255, 0.2);
+}
+
+.hud-cam-btn {
+  background: rgba(10, 15, 30, 0.7);
+  color: #00f3ff;
+  border: 1px solid rgba(0, 243, 255, 0.4);
+  padding: 0 10px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.15);
+}
+
+.hud-cam-btn:hover {
+  background: rgba(0, 243, 255, 0.25);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.35);
 }
 
 .hud-stats-group {
