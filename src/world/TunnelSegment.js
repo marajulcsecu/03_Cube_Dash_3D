@@ -106,6 +106,17 @@ export class TunnelSegment {
     this.meshGroup.rotation.set(0, 0, 0);
   }
 
+  update(delta) {
+    if (this.obstacles) {
+      for (const obstacle of this.obstacles) {
+        if (obstacle.type === 'shard' && obstacle.active && obstacle.mesh) {
+          obstacle.mesh.rotation.y += delta * 3.5;
+          obstacle.mesh.rotation.z += delta * 1.5;
+        }
+      }
+    }
+  }
+
   getLaneX(laneIndex) {
     const idx = Math.max(0, Math.min(4, laneIndex));
     return this.laneXPositions[idx];

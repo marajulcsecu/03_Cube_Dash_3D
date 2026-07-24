@@ -62,8 +62,11 @@ export class CollisionSystem {
           );
 
           if (this.playerBox.intersectsBox(this.obstacleBox)) {
-            if (obstacle.type === 'collectible') {
+            if (obstacle.type === 'shard' || obstacle.type === 'collectible') {
               obstacle.active = false;
+              if (obstacle.mesh) {
+                obstacle.mesh.visible = false;
+              }
               return { hit: true, type: 'shard', obstacle };
             } else {
               return { hit: true, type: obstacle.type || 'wall', obstacle };

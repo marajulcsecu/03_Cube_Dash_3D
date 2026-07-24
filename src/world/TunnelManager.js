@@ -99,6 +99,7 @@ export class TunnelManager {
     for (let i = 0; i < this.activeSegments.length; i++) {
       const segment = this.activeSegments[i];
       segment.meshGroup.position.z += moveDistance;
+      segment.update(delta);
     }
 
     this._recyclePassedSegments();

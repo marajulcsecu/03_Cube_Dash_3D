@@ -73,6 +73,8 @@ export class Game {
   startRun() {
     if (!this.renderer || !this.renderer.sceneFactory) return;
 
+    this.shardsCollected = 0;
+
     // Reset world and player
     if (this.renderer.sceneFactory.tunnelManager) {
       this.renderer.sceneFactory.tunnelManager.initWorld();
@@ -163,7 +165,8 @@ export class Game {
           
           if (hitResult && hitResult.hit) {
             if (hitResult.type === 'shard') {
-              logger.info('Collected Energy Shard!');
+              this.shardsCollected = (this.shardsCollected || 0) + 1;
+              logger.info(`Collected Energy Shard! Total: ${this.shardsCollected}`);
             } else {
               // Terminal collision (wall or gap)
               logger.info(`Terminal Collision: ${hitResult.type}`);
