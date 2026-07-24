@@ -1,6 +1,6 @@
 /**
- * Touch Gesture Emitter and Keyboard Input Service
- * Handles 5-lane swipes, lower-zone tap jump, sensitivity, and browser default action prevention.
+ * Touch, Pointer, and Keyboard Input Manager
+ * Supports 5-lane swipes (Touch & Mouse Pointer), lower-zone tap jump, sensitivity, and touch-action protection.
  */
 
 export class InputManager {
@@ -9,16 +9,17 @@ export class InputManager {
     this.enabled = true;
     this.listeners = [];
 
-    // Touch gesture tracking
-    this.touchStartX = 0;
-    this.touchStartY = 0;
-    this.touchStartTime = 0;
+    // Pointer gesture tracking
+    this.isPointerDown = false;
+    this.startX = 0;
+    this.startY = 0;
+    this.startTime = 0;
     this.minSwipeDistance = 25; // Ignored if micro-swipe < 25px
     this.maxSwipeTime = 500; // ms
 
-    this._boundTouchStart = this._handleTouchStart.bind(this);
-    this._boundTouchEnd = this._handleTouchEnd.bind(this);
-    this._boundTouchMove = this._handleTouchMove.bind(this);
+    this._boundPointerDown = this._handlePointerDown.bind(this);
+    this._boundPointerMove = this._handlePointerMove.bind(this);
+    this._boundPointerUp = this._handlePointerUp.bind(this);
     this._boundKeyDown = this._handleKeyDown.bind(this);
 
     this.init();
@@ -27,10 +28,11 @@ export class InputManager {
   init() {
     if (!this.target) return;
 
-    // Attach touch listeners with passive: false to allow preventDefault()
-    this.target.addEventListener('touchstart', this._boundTouchStart, { passive: false });
-    this.target.addEventListener('touchmove', this._boundTouchMove, { passive: false });
-    this.target.addEventListener('touchend', this._boundTouchEnd, { passive: false });
+    // Unified Pointer events (handles Mouse, Touch, Stylus)
+    this.target.addEventListener('pointerdown', this._boundPointerDown, { passive: false });
+    this.target.addEventListener('pointermove', this._boundPointerMove, { passive: false });
+    this.target.addEventListener('pointerup', this._boundPointerUp, { passive: false });
+    this.target.addEventListener('pointercancel', this._boundPointerUp, { passive: false });
 
     // Keyboard fallback for development
     window.addEventListener('keydown', this._boundKeyDown);
@@ -57,63 +59,58 @@ export class InputManager {
     });
   }
 
-  _handleTouchStart(e) {
-    if (!this.enabled) return;
-    
-    // Ignore touch if interacting with UI buttons
-    if (this._isUIElement(e.target)) return;
-
-    if (e.touches && e.touches.length > 0) {
-      const touch = e.touches[0];
-      this.touchStartX = touch.clientX;
-      this.touchStartY = touch.clientY;
-      this.touchStartTime = performance.now();
-    }
-  }
-
-  _handleTouchMove(e) {
-    if (!this.enabled) return;
-    if (!this._isUIElement(e.target)) {
-      e.preventDefault(); // Prevent page pull-to-refresh or scrolling
-    }
-  }
-
-  _handleTouchEnd(e) {
+  _handlePointerDown(e) {
     if (!this.enabled) return;
     if (this._isUIElement(e.target)) return;
 
-    if (e.changedTouches && e.changedTouches.length > 0) {
-      const touch = e.changedTouches[0];
-      const deltaX = touch.clientX - this.touchStartX;
-      const deltaY = touch.clientY - this.touchStartY;
-      const duration = performance.now() - this.touchStartTime;
+    this.isPointerDown = true;
+    this.startX = e.clientX;
+    this.startY = e.clientY;
+    this.startTime = performance.now();
+  }
 
-      if (duration > this.maxSwipeTime) return;
+  _handlePointerMove(e) {
+    if (!this.enabled) return;
+    if (this.isPointerDown && !this._isUIElement(e.target)) {
+      e.preventDefault();
+    }
+  }
 
-      const absX = Math.abs(deltaX);
-      const absY = Math.abs(deltaY);
+  _handlePointerUp(e) {
+    if (!this.enabled || !this.isPointerDown) return;
+    this.isPointerDown = false;
 
-      // Check if gesture exceeds minimum swipe distance threshold
-      if (absX >= this.minSwipeDistance || absY >= this.minSwipeDistance) {
-        if (absX > absY) {
-          // Horizontal swipe
-          if (deltaX > 0) {
-            this._emit('MOVE_RIGHT');
-          } else {
-            this._emit('MOVE_LEFT');
-          }
+    if (this._isUIElement(e.target)) return;
+
+    const deltaX = e.clientX - this.startX;
+    const deltaY = e.clientY - this.startY;
+    const duration = performance.now() - this.startTime;
+
+    if (duration > this.maxSwipeTime) return;
+
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // Check if gesture exceeds minimum swipe distance threshold
+    if (absX >= this.minSwipeDistance || absY >= this.minSwipeDistance) {
+      if (absX > absY) {
+        // Horizontal swipe / mouse drag
+        if (deltaX > 0) {
+          this._emit('MOVE_RIGHT');
         } else {
-          // Vertical swipe
-          if (deltaY < 0) {
-            this._emit('JUMP');
-          }
+          this._emit('MOVE_LEFT');
         }
       } else {
-        // Tap gesture: check if lower zone (bottom 35% of screen)
-        const screenHeight = window.innerHeight;
-        if (touch.clientY > screenHeight * 0.65) {
-          this._emit('JUMP', { source: 'lower_zone_tap' });
+        // Vertical swipe / mouse drag
+        if (deltaY < 0) {
+          this._emit('JUMP');
         }
+      }
+    } else {
+      // Tap / Click gesture: check if lower zone (bottom 35% of screen)
+      const screenHeight = window.innerHeight;
+      if (e.clientY > screenHeight * 0.65) {
+        this._emit('JUMP', { source: 'lower_zone_tap' });
       }
     }
   }
@@ -152,9 +149,10 @@ export class InputManager {
 
   dispose() {
     if (this.target) {
-      this.target.removeEventListener('touchstart', this._boundTouchStart);
-      this.target.removeEventListener('touchmove', this._boundTouchMove);
-      this.target.removeEventListener('touchend', this._boundTouchEnd);
+      this.target.removeEventListener('pointerdown', this._boundPointerDown);
+      this.target.removeEventListener('pointermove', this._boundPointerMove);
+      this.target.removeEventListener('pointerup', this._boundPointerUp);
+      this.target.removeEventListener('pointercancel', this._boundPointerUp);
     }
     window.removeEventListener('keydown', this._boundKeyDown);
     this.listeners.length = 0;
