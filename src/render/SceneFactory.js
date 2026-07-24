@@ -11,8 +11,7 @@ import { PlayerController } from '../gameplay/PlayerController.js';
 
 export const CAMERA_MODES = {
   THIRD_PERSON: '3RD',
-  FIRST_PERSON: '1ST',
-  HOOD: 'HOOD'
+  FIRST_PERSON: '1ST'
 };
 
 export class SceneFactory {
@@ -68,7 +67,7 @@ export class SceneFactory {
   }
 
   cycleCameraMode() {
-    const modes = [CAMERA_MODES.THIRD_PERSON, CAMERA_MODES.FIRST_PERSON, CAMERA_MODES.HOOD];
+    const modes = [CAMERA_MODES.THIRD_PERSON, CAMERA_MODES.FIRST_PERSON];
     const currentIndex = modes.indexOf(this.cameraMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     this.cameraMode = modes[nextIndex];
@@ -113,10 +112,8 @@ export class SceneFactory {
     // Handle Rider & Bike Mesh Visibility per Camera Mode
     if (this.playerController && this.playerController.alienGroup) {
       const isFirstPerson = this.cameraMode === CAMERA_MODES.FIRST_PERSON;
-      const isHoodMode = this.cameraMode === CAMERA_MODES.HOOD;
-      
-      // Hide rider body in 1st person & Hood mode so NO rider geometry blocks the screen view!
-      this.playerController.alienGroup.visible = !isFirstPerson && !isHoodMode;
+      // Hide rider body in 1st person so rider geometry never blocks the screen view!
+      this.playerController.alienGroup.visible = !isFirstPerson;
     }
 
     let targetCamX = 0;
@@ -132,7 +129,7 @@ export class SceneFactory {
     switch (this.cameraMode) {
       case CAMERA_MODES.FIRST_PERSON:
         // ── 1ST PERSON / ALIEN EYE COCKPIT VIEW ──────────────────────────────
-        // Camera sits inside alien helmet looking down tunnel through visor
+        // Camera sits inside alien helmet looking down tunnel through visor over steering console
         targetCamX = playerX;
         targetCamY = playerY + 0.65; // Alien Eye Height
         targetCamZ = 1.90;          // Cockpit / Handlebars level
@@ -140,18 +137,6 @@ export class SceneFactory {
         lookTargetY = playerY + 0.60;
         lookTargetZ = -50;
         desiredFov = 82 + speedRatio * 10;
-        break;
-
-      case CAMERA_MODES.HOOD:
-        // ── HOOD / FRONT NOSE COCKPIT RACING CAM ─────────────────────────────
-        // Low-to-ground front nose cone view — 100% unobstructed action view of all 5 lanes!
-        targetCamX = playerX;
-        targetCamY = playerY + 0.38; // Low racing nose height
-        targetCamZ = 1.65;          // Mounted on front nose cone facing -Z
-        lookTargetX = playerX;
-        lookTargetY = playerY + 0.35;
-        lookTargetZ = -50;
-        desiredFov = 85 + speedRatio * 10;
         break;
 
       case CAMERA_MODES.THIRD_PERSON:

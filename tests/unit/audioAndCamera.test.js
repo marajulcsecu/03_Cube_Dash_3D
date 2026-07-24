@@ -46,20 +46,17 @@ describe('AudioManager & Camera Language Unit Tests', () => {
     expect(sceneFactory.camera.position.z).toBeLessThanOrEqual(6.5);
   });
 
-  it('should support cycling between 3RD, 1ST Cockpit (Alien Eye), and HOOD camera modes', () => {
+  it('should support cycling between 3RD (Chase) and 1ST (Alien Eye Cockpit) camera modes', () => {
     expect(sceneFactory.cameraMode).toBe('3RD');
 
     // Cycle to 1ST Person (Cockpit Alien Eye View)
     expect(sceneFactory.cycleCameraMode()).toBe('1ST');
 
     sceneFactory.update(1.0, 1.0);
-    // Camera moves to alien eye height level
+    // Camera moves inside helmet cockpit at alien eye level
     expect(sceneFactory.camera.position.z).toBeLessThan(3.0);
 
-    // Cycle to HOOD (Thruster Cam)
-    expect(sceneFactory.cycleCameraMode()).toBe('HOOD');
-
-    // Cycle back to 3RD Person
+    // Cycle back to 3RD Person Chase View
     expect(sceneFactory.cycleCameraMode()).toBe('3RD');
   });
 
