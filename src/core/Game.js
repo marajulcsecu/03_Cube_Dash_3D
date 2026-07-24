@@ -135,22 +135,46 @@ export class Game {
   _checkTutorialAdvance(actionType) {
     if (this.stateMachine.getState() !== STATES.TUTORIAL) return;
 
-    const currentPrompt = this.tutorialManager.getCurrentStepPrompt();
-    if (currentPrompt && currentPrompt.id === actionType) {
-      const finished = this.tutorialManager.advanceStep();
+    const currentStep = this.tutorialManager.getCurrentStep();
+    if (currentStep && currentStep.id === actionType) {
+      const feedbackMsg = actionType === 'LANE_SHIFT' ? '✓ EXCELLENT LANE SHIFT!' : actionType === 'JUMP' ? '✓ PERFECT JUMP!' : '✓ SHARD COLLECTED!';
+      const finished = this.tutorialManager.advanceStep(feedbackMsg);
+      this._updateTutorialPrompt();
+
       if (finished) {
-        this.stateMachine.transitionTo(STATES.RUNNING);
-      } else {
-        this._updateTutorialPrompt();
+        setTimeout(() => {
+          if (this.stateMachine.getState() === STATES.TUTORIAL) {
+            this.stateMachine.transitionTo(STATES.RUNNING);
+          }
+        }, 800);
       }
     }
   }
 
   _updateTutorialPrompt() {
-    const prompt = this.tutorialManager.getCurrentStepPrompt();
-    const textEl = document.getElementById('tutorial-text');
-    if (textEl && prompt) {
-      textEl.textContent = prompt.text;
+    const step = this.tutorialManager.getCurrentStep();
+    const badgeEl = document.getElementById('tutorial-badge');
+    const titleEl = document.getElementById('tutorial-title');
+    const keysEl = document.getElementById('tutorial-keys');
+    const hintEl = document.getElementById('tutorial-hint');
+    const feedbackEl = document.getElementById('tutorial-feedback');
+
+    if (feedbackEl) {
+      if (this.tutorialManager.feedbackText) {
+        feedbackEl.textContent = this.tutorialManager.feedbackText;
+        feedbackEl.style.display = 'block';
+      } else {
+        feedbackEl.style.display = 'none';
+      }
+    }
+
+    if (step) {
+      if (badgeEl) badgeEl.textContent = step.title;
+      if (titleEl) titleEl.textContent = step.text;
+      if (hintEl) hintEl.textContent = step.gestureHint;
+      if (keysEl) {
+        keysEl.innerHTML = step.keys.map(k => `<span class="key-badge">${k}</span>`).join('');
+      }
     }
   }
 
@@ -200,6 +224,11 @@ export class Game {
 
     // Active gameplay collision & scoring check (RUNNING or TUTORIAL)
     const currentState = this.stateMachine.getState();
+    if (currentState === STATES.TUTORIAL) {
+      this.tutorialManager.update(delta);
+      this._updateTutorialPrompt();
+    }
+
     if (currentState === STATES.RUNNING || currentState === STATES.TUTORIAL) {
       if (this.renderer && this.renderer.sceneFactory) {
         const player = this.renderer.sceneFactory.playerController;

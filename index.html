@@ -43,10 +43,16 @@
 
       <!-- Tutorial Prompt Overlay Shell -->
       <div id="tutorial-shell" class="tutorial-shell interactive" style="display: none;">
+        <div id="tutorial-feedback" class="tutorial-feedback" style="display: none;">✓ PERFECT!</div>
         <div class="tutorial-card">
-          <div class="boot-badge">PILOT TRAINING</div>
-          <div id="tutorial-text" class="tutorial-text">SWIPE LEFT / RIGHT OR PRESS A / D TO SHIFT LANES</div>
-          <button id="tutorial-skip-btn" class="btn-secondary" style="margin-top: 12px; font-size: 0.75rem;">SKIP TUTORIAL</button>
+          <div class="boot-badge" id="tutorial-badge">STEP 1: SHIFT LANES</div>
+          <div id="tutorial-title" class="tutorial-title">Move Left or Right to change lanes</div>
+          <div id="tutorial-keys" class="tutorial-keys">
+            <span class="key-badge">A</span>
+            <span class="key-badge">D</span>
+          </div>
+          <div id="tutorial-hint" class="tutorial-hint">SWIPE HORIZONTALLY OR PRESS A / D</div>
+          <button id="tutorial-skip-btn" class="tutorial-skip-btn">SKIP TUTORIAL ✕</button>
         </div>
       </div>
 

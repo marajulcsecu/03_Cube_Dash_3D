@@ -35,12 +35,17 @@ window.addEventListener('DOMContentLoaded', () => {
       gameInstance?.startRun(true); // Force tutorial restart!
     });
 
-    document.getElementById('tutorial-skip-btn')?.addEventListener('click', () => {
+    const skipBtn = document.getElementById('tutorial-skip-btn');
+    const handleSkip = (e) => {
+      e?.preventDefault();
+      e?.stopPropagation();
       if (gameInstance) {
         gameInstance.tutorialManager.completeTutorial();
         gameInstance.stateMachine.transitionTo('RUNNING');
       }
-    });
+    };
+    skipBtn?.addEventListener('pointerdown', handleSkip);
+    skipBtn?.addEventListener('click', handleSkip);
 
     document.getElementById('menu-settings-btn')?.addEventListener('click', () => {
       showModal('settings-shell', true);

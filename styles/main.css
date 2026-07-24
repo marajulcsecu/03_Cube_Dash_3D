@@ -286,32 +286,98 @@ html, body {
 /* Tutorial Shell */
 .tutorial-shell {
   position: absolute;
-  bottom: 40px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 90;
+  z-index: 200;
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 90%;
+  max-width: 360px;
+}
+
+.tutorial-feedback {
+  background: rgba(0, 243, 255, 0.95);
+  color: #070913;
+  font-size: 1.1rem;
+  font-weight: 900;
+  padding: 8px 24px;
+  border-radius: 20px;
+  box-shadow: 0 0 20px #00f3ff;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+  animation: feedbackPulse 0.4s ease-out;
+}
+
+@keyframes feedbackPulse {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1.0); opacity: 1; }
 }
 
 .tutorial-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(10, 15, 30, 0.9);
-  border: 1px solid #00f3ff;
-  padding: 14px 20px;
-  border-radius: 10px;
+  background: rgba(10, 15, 30, 0.92);
+  border: 2px solid #00f3ff;
+  padding: 16px 20px;
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 243, 255, 0.3);
-  max-width: 320px;
+  box-shadow: 0 8px 32px rgba(0, 243, 255, 0.35);
+  backdrop-filter: blur(10px);
+  width: 100%;
 }
 
-.tutorial-text {
-  font-size: 0.8rem;
+.tutorial-title {
+  font-size: 0.9rem;
   font-weight: bold;
-  color: #fff;
-  margin-top: 6px;
-  line-height: 1.4;
+  color: #ffffff;
+  margin: 6px 0 10px 0;
+}
+
+.tutorial-keys {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.key-badge {
+  background: rgba(0, 243, 255, 0.2);
+  border: 1px solid #00f3ff;
+  color: #00f3ff;
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+}
+
+.tutorial-hint {
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.tutorial-skip-btn {
+  background: rgba(255, 51, 102, 0.2);
+  color: #ff3366;
+  border: 1px solid #ff3366;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.tutorial-skip-btn:hover, .tutorial-skip-btn:active {
+  background: rgba(255, 51, 102, 0.4);
+  transform: scale(1.05);
 }
 .pause-shell, .modal-shell {
   display: flex;
