@@ -108,6 +108,45 @@ export class Game {
     });
   }
 
+  setQualityPreset(preset) {
+    if (this.renderer) {
+      this.renderer.updateQualityPreset(preset);
+      logger.info(`Graphics quality preset set to: ${preset}`);
+    }
+  }
+
+  startLoop() {
+    if (this.running) return;
+    this.running = true;
+    this.clock.start();
+
+    const loop = (time) => {
+      if (!this.running) return;
+
+      try {
+        const delta = this.clock.update(time);
+        this.update(delta);
+        this.render(delta);
+      } catch (err) {
+        logger.error(`Error in main game loop: ${err.message}`);
+        this.triggerFatalError(`Runtime error: ${err.message}`);
+        return;
+      }
+
+      this.animationFrameId = requestAnimationFrame(loop);
+    };
+
+    this.animationFrameId = requestAnimationFrame(loop);
+  }
+
+  stopLoop() {
+    this.running = false;
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+  }
+
   update(delta) {
     if (this.debugOverlay) {
       this.debugOverlay.update(this.clock, this.stateMachine);
