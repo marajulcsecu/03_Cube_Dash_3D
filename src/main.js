@@ -16,9 +16,23 @@ window.addEventListener('DOMContentLoaded', () => {
     gameInstance.init(document.getElementById('app-container'));
     gameInstance.startLoop();
 
-    // Wire up menu interactions for test verification
+    // Wire up menu & gameover interactions
     document.getElementById('menu-play-btn')?.addEventListener('click', () => {
-      alert('Play triggered! Gameplay scene rendering will be added in Step 3-6.');
+      if (gameInstance) {
+        gameInstance.startRun();
+      }
+    });
+
+    document.getElementById('gameover-replay-btn')?.addEventListener('click', () => {
+      if (gameInstance) {
+        gameInstance.startRun();
+      }
+    });
+
+    document.getElementById('gameover-menu-btn')?.addEventListener('click', () => {
+      if (gameInstance && gameInstance.stateMachine) {
+        gameInstance.stateMachine.transitionTo('MENU');
+      }
     });
 
     document.getElementById('menu-debug-btn')?.addEventListener('click', () => {

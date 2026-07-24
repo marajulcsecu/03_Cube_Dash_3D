@@ -9,6 +9,7 @@ import { logger } from '../services/Logger.js';
 import { DebugOverlay } from '../ui/DebugOverlay.js';
 import { ResponsiveRenderer } from '../render/ResponsiveRenderer.js';
 import { InputManager } from '../gameplay/InputManager.js';
+import { CollisionSystem } from '../gameplay/CollisionSystem.js';
 
 export class Game {
   constructor(customConfig = {}) {
@@ -19,6 +20,7 @@ export class Game {
     this.clock = new Clock();
     this.renderer = null;
     this.inputManager = null;
+    this.collisionSystem = new CollisionSystem();
     this.debugOverlay = null;
     this.animationFrameId = null;
 
@@ -58,7 +60,7 @@ export class Game {
       }
 
       this.initialized = true;
-      logger.info('Game core, renderer, and input manager successfully initialized.');
+      logger.info('Game core, renderer, input manager, and collision system successfully initialized.');
 
       // Auto transition to MENU from BOOT after initialization
       this.stateMachine.transitionTo(STATES.MENU);
@@ -68,10 +70,26 @@ export class Game {
     }
   }
 
+  startRun() {
+    if (!this.renderer || !this.renderer.sceneFactory) return;
+
+    // Reset world and player
+    if (this.renderer.sceneFactory.tunnelManager) {
+      this.renderer.sceneFactory.tunnelManager.initWorld();
+    }
+    if (this.renderer.sceneFactory.playerController) {
+      this.renderer.sceneFactory.playerController.reset();
+    }
+
+    this.stateMachine.transitionTo(STATES.RUNNING);
+  }
+
   _setupInputListeners() {
     if (!this.inputManager) return;
 
     this.inputManager.onAction((action, payload) => {
+      if (this.stateMachine.getState() !== STATES.RUNNING) return;
+
       if (!this.renderer || !this.renderer.sceneFactory || !this.renderer.sceneFactory.playerController) return;
 
       const player = this.renderer.sceneFactory.playerController;
@@ -90,48 +108,33 @@ export class Game {
     });
   }
 
-  setQualityPreset(preset) {
-    if (this.renderer) {
-      this.renderer.updateQualityPreset(preset);
-      logger.info(`Graphics quality preset set to: ${preset}`);
-    }
-  }
-
-  startLoop() {
-    if (this.running) return;
-    this.running = true;
-    this.clock.start();
-
-    const loop = (time) => {
-      if (!this.running) return;
-
-      try {
-        const delta = this.clock.update(time);
-        this.update(delta);
-        this.render(delta);
-      } catch (err) {
-        logger.error(`Error in main game loop: ${err.message}`);
-        this.triggerFatalError(`Runtime error: ${err.message}`);
-        return;
-      }
-
-      this.animationFrameId = requestAnimationFrame(loop);
-    };
-
-    this.animationFrameId = requestAnimationFrame(loop);
-  }
-
-  stopLoop() {
-    this.running = false;
-    if (this.animationFrameId !== null) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = null;
-    }
-  }
-
   update(delta) {
     if (this.debugOverlay) {
       this.debugOverlay.update(this.clock, this.stateMachine);
+    }
+
+    // Active gameplay collision check
+    if (this.stateMachine.getState() === STATES.RUNNING) {
+      if (this.renderer && this.renderer.sceneFactory) {
+        const player = this.renderer.sceneFactory.playerController;
+        const tunnelManager = this.renderer.sceneFactory.tunnelManager;
+
+        if (player && tunnelManager) {
+          const hitResult = this.collisionSystem.checkCollisions(player, tunnelManager.activeSegments);
+          
+          if (hitResult && hitResult.hit) {
+            if (hitResult.type === 'shard') {
+              logger.info('Collected Energy Shard!');
+            } else {
+              // Terminal collision (wall or gap)
+              logger.info(`Terminal Collision: ${hitResult.type}`);
+              this.stateMachine.transitionTo(STATES.GAME_OVER, {
+                reason: hitResult.type === 'gap' ? 'Floor Gap Fall' : 'Obstacle Impact'
+              });
+            }
+          }
+        }
+      }
     }
   }
 
@@ -152,11 +155,27 @@ export class Game {
 
     this.stateMachine.onEnter(STATES.MENU, () => {
       this._updateUIState('menu-shell', true);
+      this._updateUIState('gameover-shell', false);
       this.clock.pause();
     });
 
+    this.stateMachine.onLeave(STATES.MENU, () => {
+      this._updateUIState('menu-shell', false);
+    });
+
     this.stateMachine.onEnter(STATES.RUNNING, () => {
+      this._updateUIState('menu-shell', false);
+      this._updateUIState('gameover-shell', false);
       this.clock.resume();
+    });
+
+    this.stateMachine.onEnter(STATES.GAME_OVER, (prev, payload) => {
+      this.clock.pause();
+      this._updateUIState('gameover-shell', true);
+      const reasonEl = document.getElementById('gameover-reason');
+      if (reasonEl) {
+        reasonEl.textContent = payload.reason || 'Obstacle Impact';
+      }
     });
 
     this.stateMachine.onEnter(STATES.PAUSED, () => {
