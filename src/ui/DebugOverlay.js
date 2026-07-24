@@ -44,6 +44,19 @@ export class DebugOverlay {
         <span id="debug-close-btn" style="cursor: pointer;">[X]</span>
       </div>
       <div id="debug-stats-content">Initializing stats...</div>
+      <div style="margin-top: 6px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 4px;">
+        <label style="font-size: 9px; color: #9d4edd;">Pattern Gallery:</label>
+        <select id="pattern-gallery-select" style="width: 100%; background: #070913; color: #00f3ff; border: 1px solid #00f3ff; font-size: 9px; padding: 2px; margin-top: 2px;">
+          <option value="safe_runway">Safe Runway</option>
+          <option value="center_wall_outer_shards">Center Wall & Side Shards</option>
+          <option value="low_barrier_leap">Center Low Barrier Leap</option>
+          <option value="moving_gate_oscillator">Moving Gate Oscillator</option>
+          <option value="pulse_wall_beat">Expanding Pulse Wall</option>
+          <option value="crusher_frame_arch">Overhead Crusher Arch</option>
+          <option value="side_gaps_center_bridge">Side Floor Gaps</option>
+          <option value="diagonal_shard_weave">Diagonal Shard Weave</option>
+        </select>
+      </div>
       <div style="margin-top: 8px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
         <button id="preset-low-btn" style="background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; border-radius: 4px; padding: 2px 6px; font-size: 9px; cursor: pointer;">LOW</button>
         <button id="preset-med-btn" style="background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; border-radius: 4px; padding: 2px 6px; font-size: 9px; cursor: pointer;">MED</button>
@@ -59,6 +72,14 @@ export class DebugOverlay {
     this.overlayEl.querySelector('#preset-low-btn').addEventListener('click', () => this.game.setQualityPreset('low'));
     this.overlayEl.querySelector('#preset-med-btn').addEventListener('click', () => this.game.setQualityPreset('medium'));
     this.overlayEl.querySelector('#preset-high-btn').addEventListener('click', () => this.game.setQualityPreset('high'));
+    
+    this.overlayEl.querySelector('#pattern-gallery-select').addEventListener('change', (e) => {
+      const selectedId = e.target.value;
+      if (this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
+        this.game.renderer.sceneFactory.tunnelManager.spawnSpecificPattern(selectedId);
+      }
+    });
+
     this.overlayEl.querySelector('#debug-trigger-error-btn').addEventListener('click', () => {
       this.game.triggerFatalError('User initiated test error via Diagnostics Panel.');
     });

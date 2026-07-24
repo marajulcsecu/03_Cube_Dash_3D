@@ -1,11 +1,13 @@
 /**
  * Endless Tunnel World Manager
- * Manages segment pool, continuous movement, obstacle patterns, recycling, and seeded generation.
+ * Manages segment pool, continuous movement, validated pattern library generation, and object recycling.
  */
 
 import { ObjectPool } from './ObjectPools.js';
 import { TunnelSegment } from './TunnelSegment.js';
 import { SeededRNG } from './SeededRNG.js';
+import { PatternLibrary } from './PatternLibrary.js';
+import { ReachabilityValidator } from './ReachabilityValidator.js';
 import { logger } from '../services/Logger.js';
 
 export class TunnelManager {
@@ -13,11 +15,15 @@ export class TunnelManager {
     this.scene = scene;
     this.materialFactory = materialFactory;
     this.rng = new SeededRNG(seed);
+    this.patternLibrary = new PatternLibrary();
+    this.validator = new ReachabilityValidator();
     
     this.segmentLength = 10;
     this.visibleSegmentsCount = 15;
     this.activeSegments = [];
     this.totalSegmentsSpawned = 0;
+
+    this.lastPattern = null;
 
     this.segmentPool = new ObjectPool(
       () => new TunnelSegment(this.materialFactory),
@@ -51,45 +57,53 @@ export class TunnelManager {
 
     // Seed obstacle patterns after initial safe runway (segments 1-3)
     if (this.totalSegmentsSpawned > 3 && !isRest) {
-      this._populateObstacles(segment);
+      this._populateValidatedPattern(segment);
+    } else {
+      this.lastPattern = this.patternLibrary.getPattern('safe_runway');
     }
 
     this.activeSegments.push(segment);
     this.scene.add(segment.meshGroup);
   }
 
-  _populateObstacles(segment) {
-    const patternType = this.rng.nextInt(1, 5);
+  _populateValidatedPattern(segment) {
+    let candidatePattern = this.patternLibrary.getRandomPattern(this.rng, 2);
+    
+    // Validate reachability from previous pattern
+    const valResult = this.validator.validateTransition(this.lastPattern, candidatePattern, 20);
+    if (!valResult.valid) {
+      logger.warn(`ReachabilityValidator rejected pattern transition from ${this.lastPattern?.id} to ${candidatePattern.id}. Fallback to safe_runway.`);
+      candidatePattern = this.patternLibrary.getPattern('safe_runway');
+    }
 
-    switch (patternType) {
-      case 1:
-        // Wall on sides, safe center
-        segment.addObstacle('wall', 0);
-        segment.addObstacle('wall', 4);
-        segment.addObstacle('shard', 2);
-        break;
-      case 2:
-        // Low barrier across center (requires jump!)
-        segment.addObstacle('low_barrier', 2);
-        segment.addObstacle('shard', 2, -2);
-        break;
-      case 3:
-        // Walls blocking lanes 1 and 2
-        segment.addObstacle('wall', 1);
-        segment.addObstacle('wall', 2);
-        segment.addObstacle('shard', 3);
-        break;
-      case 4:
-        // Floor gap on side lanes 0 and 1
-        segment.addFloorGap([0, 1]);
-        segment.addObstacle('shard', 3);
-        break;
-      case 5:
-        // Shard line guide
-        segment.addObstacle('shard', 1, -2);
-        segment.addObstacle('shard', 2, 0);
-        segment.addObstacle('shard', 3, 2);
-        break;
+    this.lastPattern = candidatePattern;
+
+    if (candidatePattern && candidatePattern.hazards) {
+      candidatePattern.hazards.forEach(hazard => {
+        segment.addObstacleFromConfig(hazard);
+      });
+    }
+  }
+
+  spawnSpecificPattern(patternId) {
+    const pattern = this.patternLibrary.getPattern(patternId);
+    if (!pattern) return;
+
+    // Clear world and force spawn specific pattern
+    this.clearWorld();
+
+    for (let i = 0; i < 5; i++) {
+      const segment = this.segmentPool.acquire();
+      this.totalSegmentsSpawned++;
+      segment.reset(this.totalSegmentsSpawned, false);
+      segment.meshGroup.position.z = i * -this.segmentLength;
+
+      if (i === 2) {
+        pattern.hazards.forEach(hazard => segment.addObstacleFromConfig(hazard));
+      }
+
+      this.activeSegments.push(segment);
+      this.scene.add(segment.meshGroup);
     }
   }
 
@@ -130,6 +144,7 @@ export class TunnelManager {
       this.segmentPool.release(segment);
     }
     this.totalSegmentsSpawned = 0;
+    this.lastPattern = null;
     this.rng.reset();
   }
 

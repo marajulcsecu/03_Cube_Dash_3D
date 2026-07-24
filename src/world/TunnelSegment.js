@@ -1,9 +1,10 @@
 /**
  * Authoritative Tunnel Segment Representation
- * Encapsulates segment geometry, 5-lane coordinates, obstacles, and floor gaps.
+ * Encapsulates segment geometry, 5-lane coordinates, obstacle families, and floor gaps.
  */
 
 import * as THREE from 'three';
+import { OBSTACLE_TYPES } from './PatternLibrary.js';
 
 export class TunnelSegment {
   constructor(materialFactory) {
@@ -58,6 +59,35 @@ export class TunnelSegment {
     this.meshGroup.add(this.laneLineGroup);
   }
 
+  addObstacleFromConfig(hazardConfig) {
+    const type = hazardConfig.type;
+    const relativeZ = hazardConfig.relativeZ || 0;
+
+    switch (type) {
+      case OBSTACLE_TYPES.LANE_WALL:
+        this.addObstacle('wall', hazardConfig.lane, relativeZ);
+        break;
+      case OBSTACLE_TYPES.LOW_BARRIER:
+        this.addObstacle('low_barrier', hazardConfig.lane || 2, relativeZ);
+        break;
+      case OBSTACLE_TYPES.MOVING_GATE:
+        this._addMovingGate(hazardConfig.minLane || 1, hazardConfig.maxLane || 3, hazardConfig.speed || 2.5, relativeZ);
+        break;
+      case OBSTACLE_TYPES.PULSE_WALL:
+        this._addPulseWall(hazardConfig.lane || 2, relativeZ, hazardConfig.pulseFrequency || 3.0);
+        break;
+      case OBSTACLE_TYPES.CRUSHER_FRAME:
+        this._addCrusherFrame(hazardConfig.lane || 2, relativeZ);
+        break;
+      case OBSTACLE_TYPES.SHARD_TRAIL:
+        this.addObstacle('shard', hazardConfig.lane || 2, relativeZ);
+        break;
+      case OBSTACLE_TYPES.FLOOR_GAP:
+        this.addFloorGap(hazardConfig.gapLanes || [0, 1]);
+        break;
+    }
+  }
+
   addObstacle(type, laneIndex, relativeZ = 0) {
     const x = this.getLaneX(laneIndex);
     let width = 1.8, height = 2.2, depth = 0.8, y = 1.1;
@@ -80,6 +110,61 @@ export class TunnelSegment {
     const obstacleObj = {
       x, y, relativeZ, width, height, depth,
       type, active: true, mesh
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
+  _addMovingGate(minLane, maxLane, oscSpeed, relativeZ) {
+    const minX = this.getLaneX(minLane);
+    const maxX = this.getLaneX(maxLane);
+
+    const width = 1.8, height = 2.2, depth = 0.8, y = 1.1;
+    const geo = new THREE.BoxGeometry(width, height, depth);
+    const mat = this.materialFactory.get('amberEmissive');
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(minX, y, relativeZ);
+
+    this.obstacleGroup.add(mesh);
+
+    const obstacleObj = {
+      x: minX, y, relativeZ, width, height, depth,
+      type: 'moving_gate', active: true, mesh,
+      minX, maxX, oscSpeed, phase: 0
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
+  _addPulseWall(laneIndex, relativeZ, frequency) {
+    const x = this.getLaneX(laneIndex);
+    const width = 1.8, height = 2.2, depth = 0.8, y = 1.1;
+    const geo = new THREE.BoxGeometry(width, height, depth);
+    const mat = this.materialFactory.get('amberEmissive');
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, relativeZ);
+
+    this.obstacleGroup.add(mesh);
+
+    const obstacleObj = {
+      x, y, relativeZ, width, height, depth,
+      type: 'pulse_wall', active: true, mesh,
+      frequency, phase: 0
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
+  _addCrusherFrame(laneIndex, relativeZ) {
+    const x = this.getLaneX(laneIndex);
+    const width = 1.8, height = 2.2, depth = 0.8, y = 1.1;
+    const geo = new THREE.BoxGeometry(width, height, depth);
+    const mat = this.materialFactory.get('amberEmissive');
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, relativeZ);
+
+    this.obstacleGroup.add(mesh);
+
+    const obstacleObj = {
+      x, y, relativeZ, width, height, depth,
+      type: 'crusher_frame', active: true, mesh
     };
     this.obstacles.push(obstacleObj);
   }
@@ -109,9 +194,20 @@ export class TunnelSegment {
   update(delta) {
     if (this.obstacles) {
       for (const obstacle of this.obstacles) {
-        if (obstacle.type === 'shard' && obstacle.active && obstacle.mesh) {
+        if (!obstacle.active) continue;
+
+        if (obstacle.type === 'shard' && obstacle.mesh) {
           obstacle.mesh.rotation.y += delta * 3.5;
           obstacle.mesh.rotation.z += delta * 1.5;
+        } else if (obstacle.type === 'moving_gate' && obstacle.mesh) {
+          obstacle.phase = (obstacle.phase || 0) + delta * obstacle.oscSpeed;
+          const t = (Math.sin(obstacle.phase) + 1) / 2; // 0..1
+          obstacle.x = THREE.MathUtils.lerp(obstacle.minX, obstacle.maxX, t);
+          obstacle.mesh.position.x = obstacle.x;
+        } else if (obstacle.type === 'pulse_wall' && obstacle.mesh) {
+          obstacle.phase = (obstacle.phase || 0) + delta * obstacle.frequency;
+          const scaleY = 1.0 + Math.sin(obstacle.phase) * 0.25;
+          obstacle.mesh.scale.set(1.0, scaleY, 1.0);
         }
       }
     }
