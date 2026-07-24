@@ -12,6 +12,7 @@ import { InputManager } from '../gameplay/InputManager.js';
 import { CollisionSystem } from '../gameplay/CollisionSystem.js';
 import { ScoreSystem } from '../gameplay/ScoreSystem.js';
 import { MissionManager } from '../gameplay/MissionManager.js';
+import { audioManager } from '../services/AudioManager.js';
 
 export class Game {
   constructor(customConfig = {}) {
@@ -110,7 +111,9 @@ export class Game {
           player.moveRight();
           break;
         case 'JUMP':
-          player.jump();
+          if (player.jump()) {
+            audioManager.playJump();
+          }
           break;
       }
     });
@@ -186,9 +189,12 @@ export class Game {
           if (hitResult && hitResult.hit) {
             if (hitResult.type === 'shard') {
               this.scoreSystem.collectShard();
+              audioManager.playShard();
               logger.info(`Collected Energy Shard! Total: ${this.scoreSystem.shardsCount}`);
             } else {
               // Terminal collision (wall or gap)
+              audioManager.playCollision();
+              this.renderer.sceneFactory.triggerCameraShake(0.4);
               logger.info(`Terminal Collision: ${hitResult.type}`);
               this.stateMachine.transitionTo(STATES.GAME_OVER, {
                 reason: hitResult.type === 'gap' ? 'Floor Gap Fall' : 'Obstacle Impact'

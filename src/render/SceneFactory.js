@@ -1,6 +1,7 @@
 /**
  * Scene Factory for Cube Dash 3D
- * Creates and initializes the 3D Scene, Camera, Fog, and Lighting hierarchy.
+ * Creates and initializes the 3D Scene, Camera, Fog, Lighting hierarchy,
+ * and dynamic camera language (speed FOV scaling, lane camera sway, impact shake).
  */
 
 import * as THREE from 'three';
@@ -16,6 +17,12 @@ export class SceneFactory {
     this.lights = [];
     this.tunnelManager = null;
     this.playerController = null;
+
+    // Camera Juicing & Motion State
+    this.baseFov = 70;
+    this.targetFov = 70;
+    this.cameraShakeIntensity = 0;
+    this.reducedMotion = false;
 
     this._initScene();
   }
@@ -53,16 +60,62 @@ export class SceneFactory {
     this.playerController = new PlayerController(this.scene, this.materialFactory);
   }
 
+  triggerCameraShake(intensity = 0.3) {
+    if (this.reducedMotion) return;
+    this.cameraShakeIntensity = Math.min(0.5, intensity);
+  }
+
   update(delta, elapsed) {
     // Update endless pooled tunnel segments
     if (this.tunnelManager) {
-      this.tunnelManager.update(delta, 20);
+      this.tunnelManager.update(delta);
     }
 
     // Update player controller physics and visual squash/stretch
     if (this.playerController) {
       this.playerController.update(delta);
     }
+
+    this._updateCameraJuice(delta);
+  }
+
+  _updateCameraJuice(delta) {
+    if (!this.camera) return;
+
+    const currentSpeed = this.tunnelManager?.difficultyDirector?.currentSpeed || 20;
+    const playerX = this.playerController?.position.x || 0;
+    const playerY = this.playerController?.position.y || 0.5;
+
+    if (this.reducedMotion) {
+      this.camera.position.set(0, 2.8, 6.5);
+      this.camera.fov = 70;
+      this.camera.updateProjectionMatrix();
+      return;
+    }
+
+    // 1. Dynamic Speed FOV Scaling (70 -> 78 degrees max)
+    const speedRatio = Math.min(1.0, (currentSpeed - 15) / 15);
+    this.targetFov = 70 + speedRatio * 8.0;
+    this.camera.fov += (this.targetFov - this.camera.fov) * Math.min(1.0, delta * 3.0);
+    this.camera.updateProjectionMatrix();
+
+    // 2. Damped Camera X Sway following player lane (max sway 0.8 units)
+    const targetCamX = playerX * 0.2;
+    const targetCamY = 2.8 + (playerY - 0.5) * 0.15;
+    this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1.0, delta * 6.0);
+    this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1.0, delta * 6.0);
+
+    // 3. Capped Camera Shake Decay
+    if (this.cameraShakeIntensity > 0) {
+      const shakeX = (Math.random() - 0.5) * this.cameraShakeIntensity;
+      const shakeY = (Math.random() - 0.5) * this.cameraShakeIntensity;
+      this.camera.position.x += shakeX;
+      this.camera.position.y += shakeY;
+
+      this.cameraShakeIntensity = Math.max(0, this.cameraShakeIntensity - delta * 2.0);
+    }
+
+    this.camera.lookAt(playerX * 0.1, 1.0, -30);
   }
 
   updateAspect(width, height) {
