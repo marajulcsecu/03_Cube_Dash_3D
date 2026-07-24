@@ -58,7 +58,60 @@ export class PlayerController {
 
     this.meshGroup.add(this.visualMesh);
     this.meshGroup.position.set(0, this.y, 2.0); // Fixed Z position
+
+    this._buildAlienRider();
+
     this.scene.add(this.meshGroup);
+  }
+
+  _buildAlienRider() {
+    this.alienGroup = new THREE.Group();
+    this.alienGroup.name = 'AlienRider';
+    this.alienGroup.position.set(0, 0.5, 0); // Mounted on top of cube top face
+
+    // Load generated Alien Pilot Texture
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load('assets/alien_pilot.png', (texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const spriteMat = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthWrite: false
+      });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(1.5, 1.5, 1.5);
+      sprite.position.set(0, 0.65, 0);
+      this.alienGroup.add(sprite);
+    }, undefined, () => {
+      // Fallback Procedural Neon Alien Mesh
+      const headGeo = new THREE.SphereGeometry(0.28, 16, 16);
+      const headMat = new THREE.MeshStandardMaterial({
+        color: 0x00f3ff,
+        emissive: 0x00a8ff,
+        emissiveIntensity: 0.6,
+        roughness: 0.2
+      });
+      const headMesh = new THREE.Mesh(headGeo, headMat);
+      headMesh.position.set(0, 0.4, 0);
+      this.alienGroup.add(headMesh);
+
+      // Antennae with glowing orb tips
+      [-0.15, 0.15].forEach(xOffset => {
+        const antGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.25, 8);
+        const antMat = new THREE.MeshBasicMaterial({ color: 0xff007f });
+        const antMesh = new THREE.Mesh(antGeo, antMat);
+        antMesh.position.set(xOffset, 0.6, 0);
+        this.alienGroup.add(antMesh);
+
+        const orbGeo = new THREE.SphereGeometry(0.06, 8, 8);
+        const orbMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+        const orbMesh = new THREE.Mesh(orbGeo, orbMat);
+        orbMesh.position.set(xOffset, 0.75, 0);
+        this.alienGroup.add(orbMesh);
+      });
+    });
+
+    this.visualMesh.add(this.alienGroup);
   }
 
   moveLeft() {
