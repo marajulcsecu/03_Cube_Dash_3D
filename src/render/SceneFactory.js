@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { MaterialFactory } from './Materials.js';
 import { TunnelManager } from '../world/TunnelManager.js';
 import { PlayerController } from '../gameplay/PlayerController.js';
+import { SpaceEnvironment } from '../world/SpaceEnvironment.js';
 
 export const CAMERA_MODES = {
   THIRD_PERSON: '3RD',
@@ -22,6 +23,7 @@ export class SceneFactory {
     this.lights = [];
     this.tunnelManager = null;
     this.playerController = null;
+    this.spaceEnvironment = null;
 
     // Camera Juicing, Modes & Motion State
     this.cameraMode = CAMERA_MODES.THIRD_PERSON;
@@ -34,13 +36,13 @@ export class SceneFactory {
   }
 
   _initScene() {
-    // Atmospheric Fog (subtle for long distance depth readability)
-    this.scene.background = new THREE.Color(0x070913);
-    this.scene.fog = new THREE.FogExp2(0x070913, 0.007);
+    // Atmospheric Deep Space Fog (subtle for star & planet readability)
+    this.scene.background = new THREE.Color(0x040612);
+    this.scene.fog = new THREE.FogExp2(0x040612, 0.002);
 
     // Camera
     const aspect = window.innerWidth / window.innerHeight;
-    this.camera = new THREE.PerspectiveCamera(70, aspect, 0.1, 200);
+    this.camera = new THREE.PerspectiveCamera(70, aspect, 0.1, 300);
     this.camera.position.set(0, 2.3, 5.2);
     this.camera.lookAt(0, 0.8, -30);
 
@@ -61,7 +63,8 @@ export class SceneFactory {
     this.scene.add(playerLight);
     this.lights.push(playerLight);
 
-    // Build pooled endless tunnel manager & player controller
+    // Build Space Environment, endless tunnel manager & player controller
+    this.spaceEnvironment = new SpaceEnvironment(this.scene);
     this.tunnelManager = new TunnelManager(this.scene, this.materialFactory, 42);
     this.playerController = new PlayerController(this.scene, this.materialFactory);
   }
@@ -86,6 +89,11 @@ export class SceneFactory {
   }
 
   update(delta, elapsed) {
+    // Update cosmic outer space backdrop
+    if (this.spaceEnvironment) {
+      this.spaceEnvironment.update(delta, elapsed);
+    }
+
     // Update endless pooled tunnel segments
     if (this.tunnelManager) {
       this.tunnelManager.update(delta);
