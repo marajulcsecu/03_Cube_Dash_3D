@@ -14,6 +14,7 @@ import { ScoreSystem } from '../gameplay/ScoreSystem.js';
 import { MissionManager } from '../gameplay/MissionManager.js';
 import { TutorialManager } from '../gameplay/TutorialManager.js';
 import { audioManager } from '../services/AudioManager.js';
+import { gameBridge } from '../services/GameBridgeAdapter.js';
 
 export class Game {
   constructor(customConfig = {}) {
@@ -96,6 +97,7 @@ export class Game {
       this.tutorialManager.startTutorial();
       this.stateMachine.transitionTo(STATES.TUTORIAL);
     } else {
+      gameBridge.onRunStart(1);
       this.stateMachine.transitionTo(STATES.RUNNING);
     }
   }
@@ -320,6 +322,9 @@ export class Game {
       this.clock.pause();
       this._updateUIState('hud-shell', false);
       this._updateUIState('gameover-shell', true);
+
+      // Report run completion payload to MegaGameBox host bridge
+      gameBridge.onRunEnd(this.scoreSystem.score, 1, 'game_over');
 
       const reasonEl = document.getElementById('gameover-reason');
       if (reasonEl) {
