@@ -24,7 +24,7 @@ export class PlayerController {
     this.laneChangeTimer = 0.0;
 
     // Jump Physics
-    this.groundY = 0.5; // Half of 1x1x1 cube height
+    this.groundY = 0.25; // Half of 0.5-height cube
     this.y = this.groundY;
     this.verticalVelocity = 0.0;
     this.gravity = -25.0;
@@ -45,7 +45,8 @@ export class PlayerController {
   }
 
   _buildMesh() {
-    const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
+    // Thinner slab cube — 1 wide × 0.5 tall × 1 deep
+    const cubeGeo = new THREE.BoxGeometry(1, 0.5, 1);
     const cubeMat = this.materialFactory.get('playerCube');
 
     this.visualMesh = new THREE.Mesh(cubeGeo, cubeMat);
@@ -67,124 +68,217 @@ export class PlayerController {
   _buildAlienRider() {
     this.alienGroup = new THREE.Group();
     this.alienGroup.name = 'AlienRider';
-    // Position at top of cube surface (cube is 1 unit tall, centered at 0, so top face is at +0.5)
-    this.alienGroup.position.set(0, 0.5, 0);
+    // Sit on top of the 0.5-tall cube — top face is at +0.25
+    this.alienGroup.position.set(0, 0.25, 0);
 
-    // ── Skin & material palette ──────────────────────────────────────────────
-    const skinMat   = new THREE.MeshStandardMaterial({ color: 0x3de8c8, roughness: 0.5, metalness: 0.1 });
-    const suitMat   = new THREE.MeshStandardMaterial({ color: 0x1a0a3a, roughness: 0.6 });
-    const suitTrimMat = new THREE.MeshStandardMaterial({ color: 0xff007f, roughness: 0.4, metalness: 0.3 });
-    const visorMat  = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00a8ff, emissiveIntensity: 1.2, transparent: true, opacity: 0.85, roughness: 0.05 });
-    const eyeGlowMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-    const orbMat    = new THREE.MeshBasicMaterial({ color: 0xff007f });
-    const darkMat   = new THREE.MeshStandardMaterial({ color: 0x0a0320, roughness: 0.8 });
+    // ── Running animation clock ───────────────────────────────────────────────
+    this._animTime = 0;
 
-    // ── LEGS (two short cylinders, standing on cube) ─────────────────────────
-    [[-0.12, 0], [0.12, 0]].forEach(([lx]) => {
-      const legGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.22, 8);
-      const leg = new THREE.Mesh(legGeo, suitMat);
-      leg.position.set(lx, 0.11, 0);
-      this.alienGroup.add(leg);
+    // ── Material palette ─────────────────────────────────────────────────────
+    const skinMat     = new THREE.MeshStandardMaterial({ color: 0x3de8c8, roughness: 0.45, metalness: 0.15 });
+    const suitMat     = new THREE.MeshStandardMaterial({ color: 0x1a0a3a, roughness: 0.6 });
+    const suitTrimMat = new THREE.MeshStandardMaterial({ color: 0xff007f, roughness: 0.35, metalness: 0.4 });
+    const visorMat    = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00a8ff, emissiveIntensity: 1.4, transparent: true, opacity: 0.82, roughness: 0.04 });
+    const eyeGlowMat  = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+    const orbMat      = new THREE.MeshBasicMaterial({ color: 0xff007f });
+    const darkMat     = new THREE.MeshStandardMaterial({ color: 0x0a0320, roughness: 0.8 });
 
-      // Boot
-      const bootGeo = new THREE.BoxGeometry(0.12, 0.06, 0.16);
-      const boot = new THREE.Mesh(bootGeo, darkMat);
-      boot.position.set(lx, 0.00, 0.02);
-      this.alienGroup.add(boot);
-    });
+    // ── UPPER BODY GROUP (bobs during run) ───────────────────────────────────
+    this._bodyGroup = new THREE.Group();
+    this._bodyGroup.position.set(0, 0, 0);
+    this.alienGroup.add(this._bodyGroup);
 
-    // ── TORSO (slightly flared box with suit trim) ───────────────────────────
+    // ── LEFT LEG pivot ───────────────────────────────────────────────────────
+    this._legL = new THREE.Group();
+    this._legL.position.set(-0.12, 0.22, 0);
+    this.alienGroup.add(this._legL);
+
+    const legLGeo = new THREE.CylinderGeometry(0.065, 0.06, 0.26, 8);
+    this._legL.add(new THREE.Mesh(legLGeo, suitMat));
+    const bootLGeo = new THREE.BoxGeometry(0.13, 0.07, 0.18);
+    const bootL = new THREE.Mesh(bootLGeo, darkMat);
+    bootL.position.set(0, -0.15, 0.02);
+    this._legL.add(bootL);
+
+    // ── RIGHT LEG pivot ──────────────────────────────────────────────────────
+    this._legR = new THREE.Group();
+    this._legR.position.set(0.12, 0.22, 0);
+    this.alienGroup.add(this._legR);
+
+    const legRGeo = new THREE.CylinderGeometry(0.065, 0.06, 0.26, 8);
+    this._legR.add(new THREE.Mesh(legRGeo, suitMat));
+    const bootRGeo = new THREE.BoxGeometry(0.13, 0.07, 0.18);
+    const bootR = new THREE.Mesh(bootRGeo, darkMat);
+    bootR.position.set(0, -0.15, 0.02);
+    this._legR.add(bootR);
+
+    // ── TORSO ────────────────────────────────────────────────────────────────
     const torsoGeo = new THREE.BoxGeometry(0.38, 0.28, 0.22);
     const torso = new THREE.Mesh(torsoGeo, suitMat);
-    torso.position.set(0, 0.36, 0);
-    this.alienGroup.add(torso);
+    torso.position.set(0, 0.52, 0);
+    this._bodyGroup.add(torso);
 
     // Chest trim stripe
-    const trimGeo = new THREE.BoxGeometry(0.38, 0.04, 0.23);
+    const trimGeo = new THREE.BoxGeometry(0.38, 0.04, 0.235);
     const trim = new THREE.Mesh(trimGeo, suitTrimMat);
-    trim.position.set(0, 0.38, 0);
-    this.alienGroup.add(trim);
+    trim.position.set(0, 0.54, 0);
+    this._bodyGroup.add(trim);
 
-    // Chest panel glow
-    const panelGeo = new THREE.BoxGeometry(0.12, 0.10, 0.24);
+    // Chest reactor glow
+    const panelGeo = new THREE.BoxGeometry(0.11, 0.09, 0.24);
     const panel = new THREE.Mesh(panelGeo, visorMat);
-    panel.position.set(0, 0.35, 0);
-    this.alienGroup.add(panel);
+    panel.position.set(0, 0.51, 0);
+    this._bodyGroup.add(panel);
 
-    // ── ARMS (angled outward) ────────────────────────────────────────────────
-    [[-1, -0.22], [1, 0.22]].forEach(([side, xPos]) => {
-      const armGeo = new THREE.CylinderGeometry(0.06, 0.05, 0.24, 8);
-      const arm = new THREE.Mesh(armGeo, suitMat);
-      arm.rotation.z = side * 0.6;
-      arm.position.set(xPos, 0.32, 0);
-      this.alienGroup.add(arm);
+    // ── LEFT ARM pivot (shoulder socket at torso edge) ───────────────────────
+    this._armL = new THREE.Group();
+    this._armL.position.set(-0.22, 0.56, 0);
+    this._bodyGroup.add(this._armL);
 
-      // Glove
-      const gloveGeo = new THREE.SphereGeometry(0.07, 8, 8);
-      const glove = new THREE.Mesh(gloveGeo, skinMat);
-      glove.position.set(xPos + side * 0.08, 0.22, 0);
-      this.alienGroup.add(glove);
-    });
+    const armLGeo = new THREE.CylinderGeometry(0.055, 0.045, 0.26, 8);
+    const armLMesh = new THREE.Mesh(armLGeo, suitMat);
+    armLMesh.position.set(0, -0.13, 0);
+    this._armL.add(armLMesh);
+
+    const gloveL = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), skinMat);
+    gloveL.position.set(0, -0.27, 0);
+    this._armL.add(gloveL);
+
+    // ── RIGHT ARM pivot ──────────────────────────────────────────────────────
+    this._armR = new THREE.Group();
+    this._armR.position.set(0.22, 0.56, 0);
+    this._bodyGroup.add(this._armR);
+
+    const armRGeo = new THREE.CylinderGeometry(0.055, 0.045, 0.26, 8);
+    const armRMesh = new THREE.Mesh(armRGeo, suitMat);
+    armRMesh.position.set(0, -0.13, 0);
+    this._armR.add(armRMesh);
+
+    const gloveR = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 8), skinMat);
+    gloveR.position.set(0, -0.27, 0);
+    this._armR.add(gloveR);
 
     // ── NECK ─────────────────────────────────────────────────────────────────
-    const neckGeo = new THREE.CylinderGeometry(0.07, 0.09, 0.08, 8);
+    const neckGeo = new THREE.CylinderGeometry(0.065, 0.085, 0.09, 8);
     const neck = new THREE.Mesh(neckGeo, skinMat);
-    neck.position.set(0, 0.54, 0);
-    this.alienGroup.add(neck);
+    neck.position.set(0, 0.70, 0);
+    this._bodyGroup.add(neck);
 
-    // ── HEAD (slightly oval) ─────────────────────────────────────────────────
-    const headGeo = new THREE.SphereGeometry(0.22, 16, 16);
+    // ── HEAD GROUP (bobs with body + slight independent head bob) ────────────
+    this._headGroup = new THREE.Group();
+    this._headGroup.position.set(0, 0.92, 0);
+    this._bodyGroup.add(this._headGroup);
+
+    const headGeo = new THREE.SphereGeometry(0.215, 16, 16);
     const head = new THREE.Mesh(headGeo, skinMat);
-    head.scale.set(1, 1.15, 0.95);
-    head.position.set(0, 0.74, 0);
-    this.alienGroup.add(head);
+    head.scale.set(1, 1.12, 0.93);
+    this._headGroup.add(head);
 
-    // ── VISOR (flat ellipse across face front) ───────────────────────────────
-    const visorGeo = new THREE.BoxGeometry(0.32, 0.12, 0.06);
+    // Visor
+    const visorGeo = new THREE.BoxGeometry(0.31, 0.11, 0.07);
     const visor = new THREE.Mesh(visorGeo, visorMat);
-    visor.position.set(0, 0.74, 0.19);
-    this.alienGroup.add(visor);
+    visor.position.set(0, 0, 0.19);
+    this._headGroup.add(visor);
 
-    // ── EYES (glowing dots inside visor) ────────────────────────────────────
-    [-0.08, 0.08].forEach(ex => {
-      const eyeGeo = new THREE.SphereGeometry(0.035, 8, 8);
-      const eye = new THREE.Mesh(eyeGeo, eyeGlowMat);
-      eye.position.set(ex, 0.74, 0.22);
-      this.alienGroup.add(eye);
+    // Eyes
+    [-0.075, 0.075].forEach(ex => {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeGlowMat);
+      eye.position.set(ex, 0, 0.215);
+      this._headGroup.add(eye);
     });
 
-    // ── HELMET RIM ───────────────────────────────────────────────────────────
-    const rimGeo = new THREE.TorusGeometry(0.22, 0.025, 8, 24, Math.PI);
+    // Helmet rim
+    const rimGeo = new THREE.TorusGeometry(0.215, 0.022, 8, 24, Math.PI);
     const rim = new THREE.Mesh(rimGeo, suitTrimMat);
-    rim.position.set(0, 0.74, 0);
     rim.rotation.y = Math.PI / 2;
-    this.alienGroup.add(rim);
+    this._headGroup.add(rim);
 
-    // ── ANTENNAE ─────────────────────────────────────────────────────────────
-    [[-0.12, 0.1], [0.12, -0.1]].forEach(([ax, az]) => {
-      const antBase = new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8);
-      const ant = new THREE.Mesh(antBase, suitTrimMat);
-      ant.position.set(ax, 1.01, az);
-      ant.rotation.z = ax < 0 ? -0.25 : 0.25;
-      this.alienGroup.add(ant);
-
-      // Glowing orb tip
-      const orbGeo = new THREE.SphereGeometry(0.045, 8, 8);
-      const orb = new THREE.Mesh(orbGeo, orbMat);
-      orb.position.set(ax + (ax < 0 ? -0.05 : 0.05), 1.12, az);
-      this.alienGroup.add(orb);
-    });
-
-    // ── EAR FINS (pointed alien ears) ────────────────────────────────────────
+    // Ear fins
     [-1, 1].forEach(side => {
-      const earGeo = new THREE.ConeGeometry(0.06, 0.18, 6);
-      const ear = new THREE.Mesh(earGeo, skinMat);
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.17, 6), skinMat);
       ear.rotation.z = side * (Math.PI / 2 + 0.3);
-      ear.position.set(side * 0.28, 0.76, 0);
-      this.alienGroup.add(ear);
+      ear.position.set(side * 0.265, 0, 0);
+      this._headGroup.add(ear);
     });
+
+    // ── ANTENNAE (stored for wobble) ─────────────────────────────────────────
+    this._antL = new THREE.Group();
+    this._antL.position.set(-0.10, 0.22, 0.05);
+    this._headGroup.add(this._antL);
+    this._antL.add(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.22, 8), suitTrimMat));
+    const orbL = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), orbMat);
+    orbL.position.set(0, 0.13, 0);
+    this._antL.add(orbL);
+
+    this._antR = new THREE.Group();
+    this._antR.position.set(0.10, 0.22, -0.05);
+    this._headGroup.add(this._antR);
+    this._antR.add(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.22, 8), suitTrimMat));
+    const orbR = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), orbMat);
+    orbR.position.set(0, 0.13, 0);
+    this._antR.add(orbR);
 
     this.visualMesh.add(this.alienGroup);
+  }
+
+  /**
+   * Procedural running animation — driven by elapsed time.
+   * Arms swing fore/back on Z, legs alternate on X, body bobs on Y,
+   * antennae wobble. On jump: arms raise up, legs tuck forward.
+   */
+  _updateAlienAnimation(delta) {
+    if (!this.alienGroup) return;
+
+    this._animTime += delta;
+    const t = this._animTime;
+    const RUN_FREQ  = 6.5;  // cycles per second
+    const ARM_AMP   = 0.75; // radians arm swing
+    const LEG_AMP   = 0.60; // radians leg stride
+    const BOB_AMP   = 0.018; // Y bob amplitude
+    const ANT_AMP   = 0.18; // antennae wobble
+
+    if (this.isGrounded) {
+      // ── Running cycle ─────────────────────────────────────────────────────
+      const phase = t * RUN_FREQ;
+      const swing = Math.sin(phase);
+      const swingAlt = -swing; // opposite phase for alternating limbs
+
+      // Arms swing fore/back (Z rotation around shoulder pivot)
+      if (this._armL) this._armL.rotation.x = swing * ARM_AMP;
+      if (this._armR) this._armR.rotation.x = swingAlt * ARM_AMP;
+
+      // Legs alternate stride (X-axis kick at hip)
+      if (this._legL) this._legL.rotation.x = swingAlt * LEG_AMP;
+      if (this._legR) this._legR.rotation.x = swing * LEG_AMP;
+
+      // Body bob (double frequency — two bobs per stride cycle)
+      const bob = Math.abs(Math.sin(phase)) * BOB_AMP;
+      if (this._bodyGroup) this._bodyGroup.position.y = bob;
+
+      // Head slight counter-bob for naturalness
+      if (this._headGroup) this._headGroup.rotation.x = swing * 0.04;
+
+      // Antennae wobble (slight lag behind body)
+      if (this._antL) this._antL.rotation.z = Math.sin(phase + 0.5) * ANT_AMP;
+      if (this._antR) this._antR.rotation.z = Math.sin(phase - 0.5) * -ANT_AMP;
+
+    } else {
+      // ── Jump pose — arms up, legs tucked ─────────────────────────────────
+      const jumpProgress = Math.min(1, Math.abs(this.verticalVelocity) / this.jumpImpulse);
+      const rising = this.verticalVelocity > 0;
+
+      if (this._armL) this._armL.rotation.x = THREE.MathUtils.lerp(this._armL.rotation.x, rising ? -1.1 : 0.3, 0.2);
+      if (this._armR) this._armR.rotation.x = THREE.MathUtils.lerp(this._armR.rotation.x, rising ? -1.1 : 0.3, 0.2);
+      if (this._legL) this._legL.rotation.x = THREE.MathUtils.lerp(this._legL.rotation.x, rising ? 0.6 : -0.3, 0.2);
+      if (this._legR) this._legR.rotation.x = THREE.MathUtils.lerp(this._legR.rotation.x, rising ? 0.6 : -0.3, 0.2);
+
+      // Head tilts up on ascent, forward on descent
+      if (this._headGroup) this._headGroup.rotation.x = rising ? -0.15 : 0.12;
+
+      // Antennae trail back on jump
+      if (this._antL) this._antL.rotation.z = rising ? -0.35 : 0.2;
+      if (this._antR) this._antR.rotation.z = rising ? 0.35 : -0.2;
+    }
   }
 
   moveLeft() {
@@ -225,6 +319,7 @@ export class PlayerController {
     this._updateLaneMovement(delta);
     this._updateJumpPhysics(delta);
     this._updateVisualDeformation(delta);
+    this._updateAlienAnimation(delta);
 
     // Sync 3D mesh position with logical (currentX, y, 2.0)
     this.meshGroup.position.x = this.currentX;

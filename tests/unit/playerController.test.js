@@ -14,11 +14,11 @@ describe('PlayerController Unit Tests', () => {
     player = new PlayerController(scene, materialFactory);
   });
 
-  it('should initialize player at center lane 2 with X = 0.0 and Y = 0.5', () => {
+  it('should initialize player at center lane 2 with X = 0.0 and Y = 0.25', () => {
     expect(player.currentLane).toBe(2);
     expect(player.targetLane).toBe(2);
     expect(player.currentX).toBe(0.0);
-    expect(player.y).toBe(0.5);
+    expect(player.y).toBe(0.25);
   });
 
   it('should change lanes left and enforce lane 0 boundary', () => {
@@ -62,11 +62,11 @@ describe('PlayerController Unit Tests', () => {
 
     // Update jump apex over 10 frames (~0.16s)
     for (let i = 0; i < 10; i++) player.update(0.016);
-    expect(player.y).toBeGreaterThan(0.5);
+    expect(player.y).toBeGreaterThan(0.25);
 
     // Update through landing over 40 more frames (~0.64s)
     for (let i = 0; i < 40; i++) player.update(0.016);
-    expect(player.y).toBe(0.5);
+    expect(player.y).toBe(0.25);
     expect(player.isGrounded).toBe(true);
   });
 
