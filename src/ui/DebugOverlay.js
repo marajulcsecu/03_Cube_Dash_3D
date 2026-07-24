@@ -44,8 +44,11 @@ export class DebugOverlay {
         <span id="debug-close-btn" style="cursor: pointer;">[X]</span>
       </div>
       <div id="debug-stats-content">Initializing stats...</div>
-      <div style="margin-top: 8px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 6px; display: flex; gap: 6px; flex-wrap: wrap;">
-        <button id="debug-trigger-error-btn" style="background: #ff3366; color: #fff; border: none; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer;">Test Fatal Error</button>
+      <div style="margin-top: 8px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+        <button id="preset-low-btn" style="background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; border-radius: 4px; padding: 2px 6px; font-size: 9px; cursor: pointer;">LOW</button>
+        <button id="preset-med-btn" style="background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; border-radius: 4px; padding: 2px 6px; font-size: 9px; cursor: pointer;">MED</button>
+        <button id="preset-high-btn" style="background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; border-radius: 4px; padding: 2px 6px; font-size: 9px; cursor: pointer;">HIGH</button>
+        <button id="debug-trigger-error-btn" style="background: #ff3366; color: #fff; border: none; border-radius: 4px; padding: 2px 6px; font-size: 9px; cursor: pointer; margin-left: auto;">Fatal Error</button>
       </div>
     `;
 
@@ -53,6 +56,9 @@ export class DebugOverlay {
     this.statsEl = this.overlayEl.querySelector('#debug-stats-content');
 
     this.overlayEl.querySelector('#debug-close-btn').addEventListener('click', () => this.hide());
+    this.overlayEl.querySelector('#preset-low-btn').addEventListener('click', () => this.game.setQualityPreset('low'));
+    this.overlayEl.querySelector('#preset-med-btn').addEventListener('click', () => this.game.setQualityPreset('medium'));
+    this.overlayEl.querySelector('#preset-high-btn').addEventListener('click', () => this.game.setQualityPreset('high'));
     this.overlayEl.querySelector('#debug-trigger-error-btn').addEventListener('click', () => {
       this.game.triggerFatalError('User initiated test error via Diagnostics Panel.');
     });
@@ -88,14 +94,16 @@ export class DebugOverlay {
     const state = stateMachine ? stateMachine.getState() : 'N/A';
     const delta = clock ? (clock.deltaSeconds * 1000).toFixed(1) : 0;
     const elapsed = clock ? clock.elapsedSeconds.toFixed(1) : 0;
-    const dpr = window.devicePixelRatio || 1;
     const viewport = `${window.innerWidth}x${window.innerHeight}`;
 
+    const rendererInfo = this.game.renderer ? this.game.renderer.info : { drawCalls: 0, triangles: 0, preset: 'N/A', dpr: 1 };
+
     this.statsEl.innerHTML = `
-      <div><strong>State:</strong> <span style="color: #fff;">${state}</span></div>
+      <div><strong>State:</strong> <span style="color: #fff;">${state}</span> | <strong>Preset:</strong> <span style="color: #9d4edd;">${rendererInfo.preset}</span></div>
       <div><strong>FPS:</strong> ${this.currentFps} FPS | <strong>Delta:</strong> ${delta}ms</div>
-      <div><strong>Elapsed:</strong> ${elapsed}s</div>
-      <div><strong>Viewport:</strong> ${viewport} | <strong>DPR:</strong> ${dpr}</div>
+      <div><strong>Elapsed:</strong> ${elapsed}s | <strong>DPR:</strong> ${rendererInfo.dpr}</div>
+      <div><strong>Calls:</strong> ${rendererInfo.drawCalls} | <strong>Tris:</strong> ${rendererInfo.triangles}</div>
+      <div><strong>Viewport:</strong> ${viewport}</div>
     `;
   }
 }

@@ -7,6 +7,7 @@ import { StateMachine } from './StateMachine.js';
 import { Clock } from './Clock.js';
 import { logger } from '../services/Logger.js';
 import { DebugOverlay } from '../ui/DebugOverlay.js';
+import { ResponsiveRenderer } from '../render/ResponsiveRenderer.js';
 
 export class Game {
   constructor(customConfig = {}) {
@@ -15,6 +16,7 @@ export class Game {
     this.configManager = new ConfigManager(customConfig);
     this.stateMachine = new StateMachine(STATES.BOOT);
     this.clock = new Clock();
+    this.renderer = null;
     this.debugOverlay = null;
     this.animationFrameId = null;
 
@@ -34,7 +36,16 @@ export class Game {
       return;
     }
 
+    const canvasEl = document.getElementById('game-canvas');
+    if (!canvasEl) {
+      this.triggerFatalError('Game canvas element missing during init.');
+      return;
+    }
+
     try {
+      const graphicsConfig = this.configManager.get('graphics');
+      this.renderer = new ResponsiveRenderer(canvasEl, graphicsConfig.preset, graphicsConfig.dprCap);
+
       this.debugOverlay = new DebugOverlay(this.containerEl, this);
       
       if (this.configManager.get('debug')) {
@@ -42,13 +53,20 @@ export class Game {
       }
 
       this.initialized = true;
-      logger.info('Game core successfully initialized.');
+      logger.info('Game core and renderer successfully initialized.');
 
       // Auto transition to MENU from BOOT after initialization
       this.stateMachine.transitionTo(STATES.MENU);
 
     } catch (err) {
       this.triggerFatalError(`Initialization failed: ${err.message}`);
+    }
+  }
+
+  setQualityPreset(preset) {
+    if (this.renderer) {
+      this.renderer.updateQualityPreset(preset);
+      logger.info(`Graphics quality preset set to: ${preset}`);
     }
   }
 
@@ -63,7 +81,7 @@ export class Game {
       try {
         const delta = this.clock.update(time);
         this.update(delta);
-        this.render();
+        this.render(delta);
       } catch (err) {
         logger.error(`Error in main game loop: ${err.message}`);
         this.triggerFatalError(`Runtime error: ${err.message}`);
@@ -90,8 +108,10 @@ export class Game {
     }
   }
 
-  render() {
-    // Renderer rendering loop placeholder (wired up in Step 3)
+  render(delta = 0) {
+    if (this.renderer) {
+      this.renderer.render(delta, this.clock.elapsedSeconds);
+    }
   }
 
   _setupStateHandlers() {
