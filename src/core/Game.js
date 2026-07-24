@@ -244,9 +244,23 @@ export class Game {
 
     this.stateMachine.onEnter(STATES.RUNNING, () => {
       this._updateUIState('menu-shell', false);
+      this._updateUIState('pause-shell', false);
       this._updateUIState('hud-shell', true);
       this._updateUIState('gameover-shell', false);
       this.clock.resume();
+    });
+
+    this.stateMachine.onLeave(STATES.RUNNING, () => {
+      this._updateUIState('hud-shell', false);
+    });
+
+    this.stateMachine.onEnter(STATES.PAUSED, () => {
+      this.clock.pause();
+      this._updateUIState('pause-shell', true);
+    });
+
+    this.stateMachine.onLeave(STATES.PAUSED, () => {
+      this._updateUIState('pause-shell', false);
     });
 
     this.stateMachine.onEnter(STATES.GAME_OVER, (prev, payload) => {

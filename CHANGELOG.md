@@ -2,10 +2,10 @@
 
 All notable changes to the **Cube Dash 3D** project will be documented in this file.
 
-## [1.0.0-step10] - 2026-07-24
+## [1.0.0-step11] - 2026-07-24
 ### Added
-- Implemented Web Audio API procedural synthesizer (`AudioManager`) creating 100% offline sound effects for jumps, energy shard collection, and terminal collision crashes.
-- Bound `window.setAudioMuted(isMuted)` MegaGameBox bridge contract for global instant muting.
-- Implemented camera language in `SceneFactory`: speed-based dynamic FOV scaling (70° up to 78° capped), damped camera X sway following player lane movements, and decaying impact camera shake.
-- Added reduced motion support flag disabling camera shake and excessive FOV shifts.
-- Added unit tests for audio bridge, speed FOV scaling, impact camera shake decay, and reduced motion safety (47 total tests passing).
+- Built production UI Shells for Boot, Main Menu, Pause Menu, Settings Preferences Modal, How-to-Play Guide Modal, In-Game HUD, Game Over Breakdown, and Fatal Error.
+- Added top-left HUD Pause button (`❚❚`) allowing touch and keyboard users to pause run state smoothly.
+- Built Preferences modal with toggles for Sound Effects, Motion Comfort (Standard / Reduced), and Graphics Quality presets (`LOW`, `MED`, `HIGH`).
+- Built How-to-Play guide modal outlining lane shifting, jumping mechanics, energy shards, and rest runways.
+- Added unit test suite `tests/unit/uiShells.test.js` validating state machine UI shell toggling and navigation (49 total tests passing).

@@ -24,17 +24,20 @@
 
       <!-- In-Game HUD Shell -->
       <div id="hud-shell" class="hud-shell" style="display: none;">
-        <div class="hud-item">
-          <span class="hud-label">SCORE</span>
-          <span id="hud-score" class="hud-value">0</span>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">MULT</span>
-          <span id="hud-multiplier" class="hud-value accent">1x</span>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">SHARDS</span>
-          <span id="hud-shards" class="hud-value cyan">0</span>
+        <button id="hud-pause-btn" class="hud-pause-btn">❚❚</button>
+        <div class="hud-stats-group">
+          <div class="hud-item">
+            <span class="hud-label">SCORE</span>
+            <span id="hud-score" class="hud-value">0</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">MULT</span>
+            <span id="hud-multiplier" class="hud-value accent">1x</span>
+          </div>
+          <div class="hud-item">
+            <span class="hud-label">SHARDS</span>
+            <span id="hud-shards" class="hud-value cyan">0</span>
+          </div>
         </div>
       </div>
 
@@ -45,8 +48,75 @@
         <div class="menu-subtitle">Neon Tunnel Runner</div>
         <div class="menu-actions">
           <button id="menu-play-btn" class="btn-primary">PLAY RUN</button>
+          <button id="menu-help-btn" class="btn-secondary">HOW TO PLAY</button>
+          <button id="menu-settings-btn" class="btn-secondary">SETTINGS</button>
           <button id="menu-debug-btn" class="btn-secondary">DIAGNOSTICS PANEL</button>
-          <button id="menu-error-test-btn" class="btn-danger">TRIGGER TEST ERROR</button>
+        </div>
+      </div>
+
+      <!-- Pause Menu Shell -->
+      <div id="pause-shell" class="pause-shell interactive" style="display: none;">
+        <div class="boot-badge">PAUSED</div>
+        <div class="menu-title">SIMULATION PAUSED</div>
+        <div class="menu-actions">
+          <button id="pause-resume-btn" class="btn-primary">RESUME RUN</button>
+          <button id="pause-restart-btn" class="btn-secondary">RESTART RUN</button>
+          <button id="pause-settings-btn" class="btn-secondary">SETTINGS</button>
+          <button id="pause-menu-btn" class="btn-secondary">MAIN MENU</button>
+        </div>
+      </div>
+
+      <!-- Settings Modal Shell -->
+      <div id="settings-shell" class="modal-shell interactive" style="display: none;">
+        <div class="modal-card">
+          <div class="boot-badge">PREFERENCES</div>
+          <div class="modal-title">SETTINGS</div>
+          
+          <div class="setting-row">
+            <span>Audio Sound FX</span>
+            <button id="setting-audio-btn" class="btn-toggle">ENABLED</button>
+          </div>
+
+          <div class="setting-row">
+            <span>Motion Comfort</span>
+            <button id="setting-motion-btn" class="btn-toggle">STANDARD</button>
+          </div>
+
+          <div class="setting-row">
+            <span>Graphics Quality</span>
+            <div class="setting-button-group">
+              <button id="setting-qual-low" class="btn-chip">LOW</button>
+              <button id="setting-qual-med" class="btn-chip active">MED</button>
+              <button id="setting-qual-high" class="btn-chip">HIGH</button>
+            </div>
+          </div>
+
+          <button id="settings-close-btn" class="btn-primary" style="margin-top: 16px;">CLOSE PREFERENCES</button>
+        </div>
+      </div>
+
+      <!-- Help / How-to-Play Modal Shell -->
+      <div id="help-shell" class="modal-shell interactive" style="display: none;">
+        <div class="modal-card">
+          <div class="boot-badge">PILOT GUIDE</div>
+          <div class="modal-title">HOW TO PLAY</div>
+
+          <div class="guide-list">
+            <div class="guide-item">
+              <span class="guide-icon">⇄</span>
+              <span><strong>LANE SHIFT:</strong> Press <code>A</code>/<code>D</code>, <code>←</code>/<code>→</code>, or swipe horizontally to change lanes.</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-icon">▲</span>
+              <span><strong>JUMP:</strong> Press <code>Space</code>, <code>W</code>, <code>↑</code>, or swipe up to leap over barriers and floor gaps.</span>
+            </div>
+            <div class="guide-item">
+              <span class="guide-icon">◆</span>
+              <span><strong>SHARDS:</strong> Collect cyan energy shards for +50 pts and score multiplier boosts.</span>
+            </div>
+          </div>
+
+          <button id="help-close-btn" class="btn-primary" style="margin-top: 16px;">BACK TO MENU</button>
         </div>
       </div>
 
