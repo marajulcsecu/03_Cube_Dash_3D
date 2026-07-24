@@ -16,13 +16,14 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  // Temporary simulation of boot completion for foundation verification
+  // Foundation boot status update
+  const bootStatus = document.getElementById('boot-status');
   setTimeout(() => {
-    if (bootShell) {
-      bootShell.style.display = 'none';
+    if (bootStatus) {
+      bootStatus.textContent = 'Foundation Scaffolding Ready • Awaiting State Machine';
     }
     console.log('[Cube Dash 3D] Foundation boot complete.');
-  }, 1000);
+  }, 800);
 });
 
 function showFatalError(msg) {
