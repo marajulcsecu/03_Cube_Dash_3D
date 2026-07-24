@@ -110,18 +110,19 @@ export class SceneFactory {
     const aspect = this.camera.aspect || (window.innerWidth / window.innerHeight);
     const portraitFactor = Math.max(0, Math.min(1.0, (1.6 - aspect) / 1.15));
 
-    // Handle First-Person Rider Visibility
-    if (this.playerController) {
+    // Handle Rider & Bike Mesh Visibility per Camera Mode
+    if (this.playerController && this.playerController.alienGroup) {
       const isFirstPerson = this.cameraMode === CAMERA_MODES.FIRST_PERSON;
-      if (this.playerController.alienGroup) {
-        this.playerController.alienGroup.visible = !isFirstPerson;
-      }
+      const isHoodMode = this.cameraMode === CAMERA_MODES.HOOD;
+      
+      // Hide rider body in 1st person & Hood mode so NO rider geometry blocks the screen view!
+      this.playerController.alienGroup.visible = !isFirstPerson && !isHoodMode;
     }
 
     let targetCamX = 0;
     let targetCamY = 2.3;
     let targetCamZ = 5.2;
-    let lookTargetX = playerX * 0.08;
+    let lookTargetX = playerX * 0.1;
     let lookTargetY = 0.8;
     let lookTargetZ = -30;
     let desiredFov = 70;
@@ -142,32 +143,34 @@ export class SceneFactory {
         break;
 
       case CAMERA_MODES.HOOD:
-        // ── HOOD / THRUST CAM ────────────────────────────────────────────────
-        // Low-angle tight camera right behind exhaust thrusters
-        targetCamX = playerX * 0.3;
-        targetCamY = playerY + 0.75;
-        targetCamZ = 3.6;
-        lookTargetX = playerX * 0.1;
-        lookTargetY = 0.9;
-        lookTargetZ = -35;
-        desiredFov = 74 + speedRatio * 8;
+        // ── HOOD / FRONT NOSE COCKPIT RACING CAM ─────────────────────────────
+        // Low-to-ground front nose cone view — 100% unobstructed action view of all 5 lanes!
+        targetCamX = playerX;
+        targetCamY = playerY + 0.38; // Low racing nose height
+        targetCamZ = 1.65;          // Mounted on front nose cone facing -Z
+        lookTargetX = playerX;
+        lookTargetY = playerY + 0.35;
+        lookTargetZ = -50;
+        desiredFov = 85 + speedRatio * 10;
         break;
 
       case CAMERA_MODES.THIRD_PERSON:
       default:
-        // ── 3RD PERSON CHASE CAM (PUNCHY & PROMINENT IN PORTRAIT) ────────────
-        // Keeps bike nice & large in portrait mode (base 5.2 Z + max 1.0)
-        const baseCamZ = 5.2 + portraitFactor * 1.0;
-        const baseCamY = 2.3 + portraitFactor * 0.4;
-        const swayScale = 0.25 * (1.0 - portraitFactor * 0.3);
+        // ── 3RD PERSON CHASE CAM (ALWAYS VISIBLE IN ALL 5 LANES ON MOBILE) ──
+        // Camera X tracks player X closely on mobile portrait screens (swayScale up to 0.85)
+        // so the vehicle NEVER gets cut off or lost off the screen edges in Lane 0 (-4.0) or Lane 4 (+4.0)!
+        const swayScale = THREE.MathUtils.lerp(0.25, 0.85, portraitFactor);
+        const baseCamZ = 5.4 + portraitFactor * 0.8;
+        const baseCamY = 2.4 + portraitFactor * 0.4;
 
         targetCamX = playerX * swayScale;
         targetCamY = baseCamY + (playerY - 0.25) * 0.15;
         targetCamZ = baseCamZ;
-        lookTargetX = playerX * 0.08;
+
+        lookTargetX = playerX * (0.15 * (1.0 - portraitFactor) + 0.80 * portraitFactor);
         lookTargetY = 0.8;
         lookTargetZ = -30;
-        desiredFov = 70 + speedRatio * 8.0 + portraitFactor * 6.0;
+        desiredFov = 70 + speedRatio * 8.0 + portraitFactor * 10.0;
         break;
     }
 
