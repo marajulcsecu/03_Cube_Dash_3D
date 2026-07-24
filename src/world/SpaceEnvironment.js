@@ -4,10 +4,11 @@
  * 1. Soft glowing circular starfield particles (using radial sprite texture, NO square pixel dots!)
  * 2. Saturn-like gas giant planet, cratered moon, and spinning black hole
  * 3. Dynamic Parallax World Motion: Celestial objects travel continuously past the player as you fly down the tunnel!
- * 4. Ambient passing spaceships zooming through deep space
+ * 4. Close-Range Spaceship Passings: Sleek Cyberpunk Scout Cruisers zooming right beside and overhead the tunnel with Doppler Whoosh sound!
  */
 
 import * as THREE from 'three';
+import { audioManager } from '../services/AudioManager.js';
 
 export class SpaceEnvironment {
   constructor(scene) {
@@ -219,15 +220,15 @@ export class SpaceEnvironment {
     this.group.add(this.blackHoleGroup);
   }
 
-  spawnPassingSpaceship() {
+  _createSpaceshipMesh() {
     const shipGroup = new THREE.Group();
 
-    // Fuselage / Cockpit
-    const bodyGeo = new THREE.ConeGeometry(0.5, 2.2, 4);
+    // Fuselage / Cockpit (Sleek Cyberpunk Scout Frigate)
+    const bodyGeo = new THREE.ConeGeometry(1.2, 6.0, 6);
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x141e38,
-      roughness: 0.3,
-      metalness: 0.8,
+      color: 0x121a30,
+      roughness: 0.25,
+      metalness: 0.85,
       emissive: 0x00f3ff,
       emissiveIntensity: 0.4
     });
@@ -235,43 +236,129 @@ export class SpaceEnvironment {
     bodyMesh.rotation.x = Math.PI * 0.5;
     shipGroup.add(bodyMesh);
 
-    // Swept Wings
-    const wingGeo = new THREE.BoxGeometry(2.2, 0.08, 0.8);
+    // Glowing Cockpit Canopy
+    const canopyGeo = new THREE.SphereGeometry(0.7, 12, 12);
+    const canopyMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+    const canopyMesh = new THREE.Mesh(canopyGeo, canopyMat);
+    canopyMesh.position.set(0, 0.35, 1.0);
+    shipGroup.add(canopyMesh);
+
+    // Swept Aerodynamic Wings
+    const wingGeo = new THREE.BoxGeometry(6.5, 0.12, 2.0);
     const wingMat = new THREE.MeshStandardMaterial({
       color: 0xff007f,
-      emissive: 0x660033,
-      emissiveIntensity: 0.6
+      emissive: 0x880044,
+      emissiveIntensity: 0.7
     });
     const wingMesh = new THREE.Mesh(wingGeo, wingMat);
-    wingMesh.position.set(0, 0, 0.3);
+    wingMesh.position.set(0, 0, -0.4);
     shipGroup.add(wingMesh);
 
-    // Thruster Light
-    const thrusterGeo = new THREE.SphereGeometry(0.35, 10, 10);
-    const thrusterMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
-    const thrusterMesh = new THREE.Mesh(thrusterGeo, thrusterMat);
-    thrusterMesh.position.set(0, 0, -1.2);
-    shipGroup.add(thrusterMesh);
+    // Wing-tip Plasma Beacons
+    const beaconGeo = new THREE.SphereGeometry(0.3, 10, 10);
+    const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff007f });
+    const leftBeacon = new THREE.Mesh(beaconGeo, beaconMat);
+    leftBeacon.position.set(-3.2, 0, -0.4);
+    const rightBeacon = new THREE.Mesh(beaconGeo, beaconMat);
+    rightBeacon.position.set(3.2, 0, -0.4);
+    shipGroup.add(leftBeacon);
+    shipGroup.add(rightBeacon);
 
-    // Random trajectory across space sky
-    const fromLeft = Math.random() > 0.5;
-    const startX = fromLeft ? -65 : 65;
-    const endX = fromLeft ? 65 : -65;
-    const startY = 10 + Math.random() * 25;
-    const startZ = -30 - Math.random() * 50;
+    // Twin Neon Engine Thrusters
+    const thrusterGeo = new THREE.CylinderGeometry(0.5, 0.7, 1.2, 12);
+    const thrusterMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
+    const leftThruster = new THREE.Mesh(thrusterGeo, thrusterMat);
+    leftThruster.rotation.x = Math.PI * 0.5;
+    leftThruster.position.set(-1.0, 0, -3.2);
+    const rightThruster = new THREE.Mesh(thrusterGeo, thrusterMat);
+    rightThruster.rotation.x = Math.PI * 0.5;
+    rightThruster.position.set(1.0, 0, -3.2);
+    shipGroup.add(leftThruster);
+    shipGroup.add(rightThruster);
+
+    // Long Neon Warp Trail Streak
+    const trailGeo = new THREE.CylinderGeometry(0.1, 1.0, 14, 10);
+    const trailMat = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending
+    });
+    const trailMesh = new THREE.Mesh(trailGeo, trailMat);
+    trailMesh.rotation.x = Math.PI * 0.5;
+    trailMesh.position.set(0, 0, -10.5);
+    shipGroup.add(trailMesh);
+
+    return shipGroup;
+  }
+
+  spawnPassingSpaceship() {
+    const shipGroup = this._createSpaceshipMesh();
+
+    // Select random close-range flyby mode (Left Side, Right Side, Overhead Swoop, Diagonal Pass)
+    const flybyMode = Math.floor(Math.random() * 4);
+
+    let startX = 0, startY = 0, startZ = 0;
+    let endX = 0, endY = 0, endZ = 0;
+    let speed = 90 + Math.random() * 40;
+
+    switch (flybyMode) {
+      case 0:
+        // ── 1. LEFT SIDE FLYBY (Zooms from ahead past player right beside left tunnel wall) ──
+        startX = -11.5;
+        startY = 2.5 + Math.random() * 2.0;
+        startZ = -120;
+        endX = -11.5;
+        endY = startY;
+        endZ = 45;
+        break;
+
+      case 1:
+        // ── 2. RIGHT SIDE OVERTAKE (Zooms from behind player past right tunnel wall) ──
+        startX = 12.0;
+        startY = 3.0 + Math.random() * 2.0;
+        startZ = 45;
+        endX = 12.0;
+        endY = startY;
+        endZ = -130;
+        break;
+
+      case 2:
+        // ── 3. OVERHEAD CROSSING (Swoops diagonally right over the tunnel roof) ──
+        startX = -35;
+        startY = 14.0;
+        startZ = -80;
+        endX = 35;
+        endY = 10.0;
+        endZ = -20;
+        break;
+
+      case 3:
+      default:
+        // ── 4. LOW DIAGONAL WARP PASS (Zooms low beside left wall into sky) ──
+        startX = -14.0;
+        startY = 1.0;
+        startZ = -110;
+        endX = 15.0;
+        endY = 16.0;
+        endZ = 35;
+        break;
+    }
 
     shipGroup.position.set(startX, startY, startZ);
-    shipGroup.lookAt(endX, startY, startZ);
+    shipGroup.lookAt(endX, endY, endZ);
 
     this.scene.add(shipGroup);
 
+    // Play Doppler Flyby Whoosh Sound Effect!
+    audioManager.playSpaceshipFlyby();
+
     this.spaceships.push({
       group: shipGroup,
-      startX,
-      endX,
-      startY,
-      startZ,
-      speed: 60 + Math.random() * 40,
+      startX, endX,
+      startY, endY,
+      startZ, endZ,
+      speed,
       progress: 0
     });
   }
@@ -316,17 +403,24 @@ export class SpaceEnvironment {
     this.spawnTimer += delta;
     if (this.spawnTimer >= this.nextShipSpawnTime) {
       this.spawnTimer = 0;
-      this.nextShipSpawnTime = 4.0 + Math.random() * 5.0; // Spawn ship every 4-9 seconds
+      this.nextShipSpawnTime = 3.5 + Math.random() * 4.0; // Spawn ship every 3.5 to 7.5 seconds
       this.spawnPassingSpaceship();
     }
 
     // Update active passing spaceships
     for (let i = this.spaceships.length - 1; i >= 0; i--) {
       const ship = this.spaceships[i];
-      const distance = Math.abs(ship.endX - ship.startX);
+      const distance = Math.sqrt(
+        Math.pow(ship.endX - ship.startX, 2) +
+        Math.pow(ship.endY - ship.startY, 2) +
+        Math.pow(ship.endZ - ship.startZ, 2)
+      );
+
       ship.progress += (ship.speed * delta) / distance;
 
       ship.group.position.x = THREE.MathUtils.lerp(ship.startX, ship.endX, ship.progress);
+      ship.group.position.y = THREE.MathUtils.lerp(ship.startY, ship.endY, ship.progress);
+      ship.group.position.z = THREE.MathUtils.lerp(ship.startZ, ship.endZ, ship.progress);
 
       if (ship.progress >= 1.0) {
         this.scene.remove(ship.group);

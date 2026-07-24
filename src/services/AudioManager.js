@@ -115,6 +115,40 @@ export class AudioManager {
     } catch (e) {}
   }
 
+  playSpaceshipFlyby() {
+    if (!this._canPlay()) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      // Doppler effect frequency sweep: pitch rises as ship approaches, drops as it passes
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(420, now + 0.25);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.6);
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(300, now);
+      filter.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+      filter.frequency.exponentialRampToValueAtTime(250, now + 0.6);
+      filter.Q.setValueAtTime(4.0, now);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(this.volume * 0.35, now + 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.6);
+    } catch (e) {}
+  }
+
   // ── Cyberpunk Vehicle Engine Sound Synthesizer ─────────────────────────────────
   startEngine() {
     if (!this._canPlay() || this.engineRunning) return;
