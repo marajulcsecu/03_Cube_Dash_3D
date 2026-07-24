@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { MaterialFactory } from './Materials.js';
+import { TunnelManager } from '../world/TunnelManager.js';
 
 export class SceneFactory {
   constructor() {
@@ -12,7 +13,7 @@ export class SceneFactory {
     this.camera = null;
     this.materialFactory = new MaterialFactory();
     this.lights = [];
-    this.decorativeTunnelGroup = new THREE.Group();
+    this.tunnelManager = null;
     this.playerPreviewMesh = null;
 
     this._initScene();
@@ -46,37 +47,9 @@ export class SceneFactory {
     this.scene.add(playerLight);
     this.lights.push(playerLight);
 
-    // Build decorative tunnel geometry & lane markers
-    this._buildDecorativeTunnel();
+    // Build pooled endless tunnel manager
+    this.tunnelManager = new TunnelManager(this.scene, this.materialFactory, 42);
     this._buildPlayerPreview();
-    
-    this.scene.add(this.decorativeTunnelGroup);
-  }
-
-  _buildDecorativeTunnel() {
-    const ringGeometry = new THREE.CylinderGeometry(5.5, 5.5, 3, 8, 1, true);
-    const wallMat = this.materialFactory.get('tunnelWall');
-    const cyanGridMat = this.materialFactory.get('cyanNeonGrid');
-    const violetGridMat = this.materialFactory.get('violetEmissive');
-
-    for (let i = 0; i < 25; i++) {
-      const ringGroup = new THREE.Group();
-      
-      // Outer wall
-      const mesh = new THREE.Mesh(ringGeometry, wallMat);
-      mesh.rotation.x = Math.PI / 2;
-      ringGroup.add(mesh);
-
-      // Alternating cyan/violet neon wireframe grid
-      const gridMat = (i % 2 === 0) ? cyanGridMat : violetGridMat;
-      const gridMesh = new THREE.Mesh(ringGeometry, gridMat);
-      gridMesh.rotation.x = Math.PI / 2;
-      gridMesh.scale.set(0.99, 1.01, 0.99);
-      ringGroup.add(gridMesh);
-
-      ringGroup.position.z = -i * 5;
-      this.decorativeTunnelGroup.add(ringGroup);
-    }
   }
 
   _buildPlayerPreview() {
@@ -96,13 +69,10 @@ export class SceneFactory {
   }
 
   update(delta, elapsed) {
-    // Animate tunnel ring movement down Z axis
-    this.decorativeTunnelGroup.children.forEach((ring, idx) => {
-      ring.position.z += delta * 18;
-      if (ring.position.z > 10) {
-        ring.position.z -= 125;
-      }
-    });
+    // Update endless pooled tunnel segments
+    if (this.tunnelManager) {
+      this.tunnelManager.update(delta, 20);
+    }
 
     // Subtle floating & rotation on player preview cube
     if (this.playerPreviewMesh) {

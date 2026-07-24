@@ -97,13 +97,19 @@ export class DebugOverlay {
     const viewport = `${window.innerWidth}x${window.innerHeight}`;
 
     const rendererInfo = this.game.renderer ? this.game.renderer.info : { drawCalls: 0, triangles: 0, preset: 'N/A', dpr: 1 };
+    
+    let poolStats = { active: 0, pooled: 0, totalSpawned: 0 };
+    if (this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
+      poolStats = this.game.renderer.sceneFactory.tunnelManager.stats;
+    }
 
     this.statsEl.innerHTML = `
       <div><strong>State:</strong> <span style="color: #fff;">${state}</span> | <strong>Preset:</strong> <span style="color: #9d4edd;">${rendererInfo.preset}</span></div>
       <div><strong>FPS:</strong> ${this.currentFps} FPS | <strong>Delta:</strong> ${delta}ms</div>
       <div><strong>Elapsed:</strong> ${elapsed}s | <strong>DPR:</strong> ${rendererInfo.dpr}</div>
       <div><strong>Calls:</strong> ${rendererInfo.drawCalls} | <strong>Tris:</strong> ${rendererInfo.triangles}</div>
-      <div><strong>Viewport:</strong> ${viewport}</div>
+      <div><strong>Segments:</strong> Active ${poolStats.active} | Pool ${poolStats.pooled}</div>
+      <div><strong>Spawned:</strong> ${poolStats.totalSpawned} | <strong>Viewport:</strong> ${viewport}</div>
     `;
   }
 }
