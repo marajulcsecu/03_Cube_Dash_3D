@@ -94,73 +94,123 @@ export class PlayerController {
     this.alienGroup.name = 'AlienRider';
     // Sit on top of the 0.5-tall cube — top face is at +0.25
     this.alienGroup.position.set(0, 0.25, 0);
+    // Face FORWARD into the tunnel (away from camera)
+    this.alienGroup.rotation.y = Math.PI;
 
     // ── Running animation clock ───────────────────────────────────────────────
     this._animTime = 0;
 
     // ── Material palette ─────────────────────────────────────────────────────
-    const skinMat     = new THREE.MeshStandardMaterial({ color: 0x3de8c8, roughness: 0.45, metalness: 0.15 });
-    const suitMat     = new THREE.MeshStandardMaterial({ color: 0x1a0a3a, roughness: 0.6 });
-    const suitTrimMat = new THREE.MeshStandardMaterial({ color: 0xff007f, roughness: 0.35, metalness: 0.4 });
-    const visorMat    = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00a8ff, emissiveIntensity: 1.4, transparent: true, opacity: 0.82, roughness: 0.04 });
+    const skinMat     = new THREE.MeshStandardMaterial({ color: 0x22e0af, roughness: 0.35, metalness: 0.2 });
+    const suitMat     = new THREE.MeshStandardMaterial({ color: 0x140a33, roughness: 0.45, metalness: 0.4 });
+    const armorMat    = new THREE.MeshStandardMaterial({ color: 0x1e2a4a, roughness: 0.3, metalness: 0.6 });
+    const suitTrimMat = new THREE.MeshStandardMaterial({ color: 0xff007f, roughness: 0.3, metalness: 0.5, emissive: 0x660033, emissiveIntensity: 0.5 });
+    const visorMat    = new THREE.MeshStandardMaterial({ color: 0x00f3ff, emissive: 0x00d4ff, emissiveIntensity: 1.6, transparent: true, opacity: 0.85, roughness: 0.05 });
     const eyeGlowMat  = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
     const orbMat      = new THREE.MeshBasicMaterial({ color: 0xff007f });
-    const darkMat     = new THREE.MeshStandardMaterial({ color: 0x0a0320, roughness: 0.8 });
+    const darkMat     = new THREE.MeshStandardMaterial({ color: 0x080414, roughness: 0.7 });
+
+    // Thruster glow material (saved on instance for pulse animation)
+    this._thrusterMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff });
 
     // ── UPPER BODY GROUP (bobs during run) ───────────────────────────────────
     this._bodyGroup = new THREE.Group();
     this._bodyGroup.position.set(0, 0, 0);
     this.alienGroup.add(this._bodyGroup);
 
-    // ── LEFT LEG pivot ───────────────────────────────────────────────────────
+    // ── LEGS (pivot at hips Y=0.22) ──────────────────────────────────────────
     this._legL = new THREE.Group();
-    this._legL.position.set(-0.12, 0.22, 0);
+    this._legL.position.set(-0.13, 0.22, 0);
     this.alienGroup.add(this._legL);
 
-    const legLGeo = new THREE.CylinderGeometry(0.065, 0.06, 0.26, 8);
-    this._legL.add(new THREE.Mesh(legLGeo, suitMat));
-    const bootLGeo = new THREE.BoxGeometry(0.13, 0.07, 0.18);
-    const bootL = new THREE.Mesh(bootLGeo, darkMat);
-    bootL.position.set(0, -0.15, 0.02);
+    const legLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.055, 0.26, 12), suitMat);
+    legLMesh.position.set(0, -0.02, 0);
+    this._legL.add(legLMesh);
+
+    // Knee cap armor
+    const kneeL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.08), armorMat);
+    kneeL.position.set(0, -0.02, 0.04);
+    this._legL.add(kneeL);
+
+    // Boot L
+    const bootL = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.08, 0.20), darkMat);
+    bootL.position.set(0, -0.15, 0.03);
     this._legL.add(bootL);
 
-    // ── RIGHT LEG pivot ──────────────────────────────────────────────────────
     this._legR = new THREE.Group();
-    this._legR.position.set(0.12, 0.22, 0);
+    this._legR.position.set(0.13, 0.22, 0);
     this.alienGroup.add(this._legR);
 
-    const legRGeo = new THREE.CylinderGeometry(0.065, 0.06, 0.26, 8);
-    this._legR.add(new THREE.Mesh(legRGeo, suitMat));
-    const bootRGeo = new THREE.BoxGeometry(0.13, 0.07, 0.18);
-    const bootR = new THREE.Mesh(bootRGeo, darkMat);
-    bootR.position.set(0, -0.15, 0.02);
+    const legRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.055, 0.26, 12), suitMat);
+    legRMesh.position.set(0, -0.02, 0);
+    this._legR.add(legRMesh);
+
+    // Knee cap armor
+    const kneeR = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.07, 0.08), armorMat);
+    kneeR.position.set(0, -0.02, 0.04);
+    this._legR.add(kneeR);
+
+    // Boot R
+    const bootR = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.08, 0.20), darkMat);
+    bootR.position.set(0, -0.15, 0.03);
     this._legR.add(bootR);
 
-    // ── TORSO ────────────────────────────────────────────────────────────────
-    const torsoGeo = new THREE.BoxGeometry(0.38, 0.28, 0.22);
-    const torso = new THREE.Mesh(torsoGeo, suitMat);
+    // ── TORSO & CHEST ARMOR ──────────────────────────────────────────────────
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.30, 0.24), suitMat);
     torso.position.set(0, 0.52, 0);
     this._bodyGroup.add(torso);
 
-    // Chest trim stripe
-    const trimGeo = new THREE.BoxGeometry(0.38, 0.04, 0.235);
-    const trim = new THREE.Mesh(trimGeo, suitTrimMat);
-    trim.position.set(0, 0.54, 0);
-    this._bodyGroup.add(trim);
+    // Chest Plate
+    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.22, 0.08), armorMat);
+    chestPlate.position.set(0, 0.53, 0.10);
+    this._bodyGroup.add(chestPlate);
 
-    // Chest reactor glow
-    const panelGeo = new THREE.BoxGeometry(0.11, 0.09, 0.24);
-    const panel = new THREE.Mesh(panelGeo, visorMat);
-    panel.position.set(0, 0.51, 0);
-    this._bodyGroup.add(panel);
+    // Chest Reactor Core
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.09, 12), visorMat);
+    core.rotation.x = Math.PI / 2;
+    core.position.set(0, 0.53, 0.14);
+    this._bodyGroup.add(core);
 
-    // ── LEFT ARM pivot (shoulder socket at torso edge) ───────────────────────
+    // Waist Belt
+    const belt = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.06, 0.26), suitTrimMat);
+    belt.position.set(0, 0.38, 0);
+    this._bodyGroup.add(belt);
+
+    // ── JETPACK / BACKPACK (Mounted on Back facing camera) ────────────────────
+    const jetpackGroup = new THREE.Group();
+    jetpackGroup.position.set(0, 0.52, -0.16);
+    this._bodyGroup.add(jetpackGroup);
+
+    // Main Backpack Frame
+    const packBody = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.24, 0.12), armorMat);
+    jetpackGroup.add(packBody);
+
+    // Dual Thruster Tubes
+    [-0.11, 0.11].forEach(tx => {
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.055, 0.28, 12), suitTrimMat);
+      tube.position.set(tx, -0.02, -0.02);
+      jetpackGroup.add(tube);
+
+      // Glowing Exhaust Nozzles (facing camera!)
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.06, 12), this._thrusterMat);
+      nozzle.position.set(tx, -0.16, -0.02);
+      jetpackGroup.add(nozzle);
+    });
+
+    // ── SHOULDER PAULDRONS ───────────────────────────────────────────────────
+    [-1, 1].forEach(side => {
+      const pauldron = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), armorMat);
+      pauldron.scale.set(1.2, 0.8, 1.2);
+      pauldron.position.set(side * 0.24, 0.62, 0);
+      this._bodyGroup.add(pauldron);
+    });
+
+    // ── ARMS & GLOVES ────────────────────────────────────────────────────────
     this._armL = new THREE.Group();
-    this._armL.position.set(-0.22, 0.56, 0);
+    this._armL.position.set(-0.24, 0.58, 0);
     this._bodyGroup.add(this._armL);
 
-    const armLGeo = new THREE.CylinderGeometry(0.055, 0.045, 0.26, 8);
-    const armLMesh = new THREE.Mesh(armLGeo, suitMat);
+    const armLMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.045, 0.26, 8), suitMat);
     armLMesh.position.set(0, -0.13, 0);
     this._armL.add(armLMesh);
 
@@ -168,13 +218,11 @@ export class PlayerController {
     gloveL.position.set(0, -0.27, 0);
     this._armL.add(gloveL);
 
-    // ── RIGHT ARM pivot ──────────────────────────────────────────────────────
     this._armR = new THREE.Group();
-    this._armR.position.set(0.22, 0.56, 0);
+    this._armR.position.set(0.24, 0.58, 0);
     this._bodyGroup.add(this._armR);
 
-    const armRGeo = new THREE.CylinderGeometry(0.055, 0.045, 0.26, 8);
-    const armRMesh = new THREE.Mesh(armRGeo, suitMat);
+    const armRMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.045, 0.26, 8), suitMat);
     armRMesh.position.set(0, -0.13, 0);
     this._armR.add(armRMesh);
 
@@ -182,42 +230,37 @@ export class PlayerController {
     gloveR.position.set(0, -0.27, 0);
     this._armR.add(gloveR);
 
-    // ── NECK ─────────────────────────────────────────────────────────────────
-    const neckGeo = new THREE.CylinderGeometry(0.065, 0.085, 0.09, 8);
-    const neck = new THREE.Mesh(neckGeo, skinMat);
+    // ── NECK & HEAD ──────────────────────────────────────────────────────────
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.085, 0.09, 8), skinMat);
     neck.position.set(0, 0.70, 0);
     this._bodyGroup.add(neck);
 
-    // ── HEAD GROUP (bobs with body + slight independent head bob) ────────────
     this._headGroup = new THREE.Group();
     this._headGroup.position.set(0, 0.92, 0);
     this._bodyGroup.add(this._headGroup);
 
-    const headGeo = new THREE.SphereGeometry(0.215, 16, 16);
-    const head = new THREE.Mesh(headGeo, skinMat);
-    head.scale.set(1, 1.12, 0.93);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.215, 16, 16), skinMat);
+    head.scale.set(1, 1.15, 0.95);
     this._headGroup.add(head);
 
-    // Visor
-    const visorGeo = new THREE.BoxGeometry(0.31, 0.11, 0.07);
-    const visor = new THREE.Mesh(visorGeo, visorMat);
+    // Visor (Facing Forward -Z into the tunnel)
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.31, 0.11, 0.07), visorMat);
     visor.position.set(0, 0, 0.19);
     this._headGroup.add(visor);
 
-    // Eyes
+    // Eyes inside visor
     [-0.075, 0.075].forEach(ex => {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), eyeGlowMat);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeGlowMat);
       eye.position.set(ex, 0, 0.215);
       this._headGroup.add(eye);
     });
 
-    // Helmet rim
-    const rimGeo = new THREE.TorusGeometry(0.215, 0.022, 8, 24, Math.PI);
-    const rim = new THREE.Mesh(rimGeo, suitTrimMat);
+    // Helmet Rim
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.215, 0.022, 8, 24, Math.PI), suitTrimMat);
     rim.rotation.y = Math.PI / 2;
     this._headGroup.add(rim);
 
-    // Ear fins
+    // Ear Fins
     [-1, 1].forEach(side => {
       const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.17, 6), skinMat);
       ear.rotation.z = side * (Math.PI / 2 + 0.3);
@@ -225,12 +268,12 @@ export class PlayerController {
       this._headGroup.add(ear);
     });
 
-    // ── ANTENNAE (stored for wobble) ─────────────────────────────────────────
+    // ── ANTENNAE ─────────────────────────────────────────────────────────────
     this._antL = new THREE.Group();
     this._antL.position.set(-0.10, 0.22, 0.05);
     this._headGroup.add(this._antL);
     this._antL.add(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.22, 8), suitTrimMat));
-    const orbL = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), orbMat);
+    const orbL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), orbMat);
     orbL.position.set(0, 0.13, 0);
     this._antL.add(orbL);
 
@@ -238,7 +281,7 @@ export class PlayerController {
     this._antR.position.set(0.10, 0.22, -0.05);
     this._headGroup.add(this._antR);
     this._antR.add(new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.22, 8), suitTrimMat));
-    const orbR = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 8), orbMat);
+    const orbR = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), orbMat);
     orbR.position.set(0, 0.13, 0);
     this._antR.add(orbR);
 
@@ -260,6 +303,12 @@ export class PlayerController {
     const LEG_AMP   = 0.60; // radians leg stride
     const BOB_AMP   = 0.018; // Y bob amplitude
     const ANT_AMP   = 0.18; // antennae wobble
+
+    // Jetpack thruster pulse effect
+    if (this._thrusterMat) {
+      const pulse = 0.7 + Math.sin(t * 22) * 0.3;
+      this._thrusterMat.color.setHSL(0.53, 1.0, pulse * 0.55);
+    }
 
     if (this.isGrounded) {
       // ── Running cycle ─────────────────────────────────────────────────────
@@ -288,7 +337,6 @@ export class PlayerController {
 
     } else {
       // ── Jump pose — arms up, legs tucked ─────────────────────────────────
-      const jumpProgress = Math.min(1, Math.abs(this.verticalVelocity) / this.jumpImpulse);
       const rising = this.verticalVelocity > 0;
 
       if (this._armL) this._armL.rotation.x = THREE.MathUtils.lerp(this._armL.rotation.x, rising ? -1.1 : 0.3, 0.2);
@@ -452,12 +500,19 @@ export class PlayerController {
       const easedProgress = 1 - Math.pow(1 - progress, 3);
       this.currentX = THREE.MathUtils.lerp(this.startX, targetX, easedProgress);
 
+      // Smooth banking tilt when shifting lanes
+      const dir = targetX > this.startX ? -1 : 1;
+      const bankAngle = Math.sin(progress * Math.PI) * 0.22 * dir;
+      this.visualMesh.rotation.z = bankAngle;
+
       if (progress >= 1.0) {
         this.currentX = targetX;
         this.currentLane = this.targetLane;
+        this.visualMesh.rotation.z = 0;
       }
     } else {
       this.currentLane = this.targetLane;
+      this.visualMesh.rotation.z = THREE.MathUtils.lerp(this.visualMesh.rotation.z, 0, delta * 15);
     }
   }
 
