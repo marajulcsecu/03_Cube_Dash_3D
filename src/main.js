@@ -6,6 +6,7 @@
 import { Game } from './core/Game.js';
 import { logger } from './services/Logger.js';
 import { audioManager } from './services/AudioManager.js';
+import { StorageManager } from './services/StorageManager.js';
 
 let gameInstance = null;
 
@@ -99,31 +100,87 @@ window.addEventListener('DOMContentLoaded', () => {
       gameInstance?.stateMachine?.transitionTo('MENU');
     });
 
-    // Wire up Settings Preferences Toggles
+    // Wire up Settings Preferences Toggles & Storage Persistence
+    const currentSettings = StorageManager.loadSettings();
+
+    // Sync initial UI state from stored settings
     const audioBtn = document.getElementById('setting-audio-btn');
+    if (audioBtn) {
+      audioManager.muted = currentSettings.audioMuted;
+      audioBtn.textContent = audioManager.muted ? 'MUTED' : 'ENABLED';
+    }
+
+    const motionBtn = document.getElementById('setting-motion-btn');
+    if (motionBtn && gameInstance?.renderer?.sceneFactory) {
+      gameInstance.renderer.sceneFactory.reducedMotion = currentSettings.motionComfort === 'reduced';
+      motionBtn.textContent = currentSettings.motionComfort === 'reduced' ? 'REDUCED' : 'STANDARD';
+    }
+
+    const contrastBtn = document.getElementById('setting-contrast-btn');
+    if (contrastBtn) {
+      if (currentSettings.highContrast) {
+        document.body.classList.add('high-contrast');
+        contrastBtn.textContent = 'ENABLED';
+      } else {
+        document.body.classList.remove('high-contrast');
+        contrastBtn.textContent = 'DISABLED';
+      }
+    }
+
+    // Toggle Handlers
     audioBtn?.addEventListener('click', () => {
       audioManager.muted = !audioManager.muted;
       audioBtn.textContent = audioManager.muted ? 'MUTED' : 'ENABLED';
+      const s = StorageManager.loadSettings();
+      s.audioMuted = audioManager.muted;
+      StorageManager.saveSettings(s);
     });
 
-    const motionBtn = document.getElementById('setting-motion-btn');
     motionBtn?.addEventListener('click', () => {
       if (gameInstance?.renderer?.sceneFactory) {
         const sf = gameInstance.renderer.sceneFactory;
         sf.reducedMotion = !sf.reducedMotion;
         motionBtn.textContent = sf.reducedMotion ? 'REDUCED' : 'STANDARD';
+        const s = StorageManager.loadSettings();
+        s.motionComfort = sf.reducedMotion ? 'reduced' : 'standard';
+        StorageManager.saveSettings(s);
       }
+    });
+
+    contrastBtn?.addEventListener('click', () => {
+      const isHC = document.body.classList.toggle('high-contrast');
+      contrastBtn.textContent = isHC ? 'ENABLED' : 'DISABLED';
+      const s = StorageManager.loadSettings();
+      s.highContrast = isHC;
+      StorageManager.saveSettings(s);
     });
 
     // Quality Chips
     ['low', 'med', 'high'].forEach(preset => {
-      document.getElementById(`setting-qual-${preset}`)?.addEventListener('click', (e) => {
+      const chip = document.getElementById(`setting-qual-${preset}`);
+      const normPreset = preset === 'med' ? 'medium' : preset;
+      if (currentSettings.qualityPreset === normPreset) {
+        chip?.classList.add('active');
+      }
+      chip?.addEventListener('click', (e) => {
         ['low', 'med', 'high'].forEach(p => {
           document.getElementById(`setting-qual-${p}`)?.classList.remove('active');
         });
         e.target.classList.add('active');
-        gameInstance?.setQualityPreset(preset === 'med' ? 'medium' : preset);
+        gameInstance?.setQualityPreset(normPreset);
+        const s = StorageManager.loadSettings();
+        s.qualityPreset = normPreset;
+        StorageManager.saveSettings(s);
       });
+    });
+
+    // Reset Player Progress with Deliberate Confirmation
+    document.getElementById('setting-reset-progress-btn')?.addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset all high scores and mission progress?')) {
+        StorageManager.resetProgress();
+        alert('Player progress has been reset!');
+        location.reload();
+      }
     });
 
   } catch (err) {

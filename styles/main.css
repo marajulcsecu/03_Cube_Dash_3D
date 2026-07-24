@@ -641,3 +641,34 @@ html, body {
   transform: scale(0.96);
   box-shadow: 0 2px 8px rgba(0, 243, 255, 0.3);
 }
+
+/* High Contrast Accessibility Mode */
+body.high-contrast {
+  --color-primary: #ffff00;
+  --color-secondary: #00ffff;
+  --color-bg: #000000;
+}
+body.high-contrast .btn-primary {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 0 16px #ffff00 !important;
+}
+body.high-contrast .btn-secondary {
+  border: 2px solid #ffff00 !important;
+  color: #ffff00 !important;
+  background: #000000 !important;
+}
+body.high-contrast .tutorial-card,
+body.high-contrast .modal-card,
+body.high-contrast .gameover-card,
+body.high-contrast .menu-card {
+  border: 3px solid #ffff00 !important;
+  background: #000000 !important;
+  box-shadow: 0 0 24px #ffff00 !important;
+}
+body.high-contrast .hud-metric-card {
+  border: 2px solid #ffff00 !important;
+  background: #000000 !important;
+}
