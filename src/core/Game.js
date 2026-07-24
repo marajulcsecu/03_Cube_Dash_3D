@@ -8,6 +8,7 @@ import { Clock } from './Clock.js';
 import { logger } from '../services/Logger.js';
 import { DebugOverlay } from '../ui/DebugOverlay.js';
 import { ResponsiveRenderer } from '../render/ResponsiveRenderer.js';
+import { InputManager } from '../gameplay/InputManager.js';
 
 export class Game {
   constructor(customConfig = {}) {
@@ -17,6 +18,7 @@ export class Game {
     this.stateMachine = new StateMachine(STATES.BOOT);
     this.clock = new Clock();
     this.renderer = null;
+    this.inputManager = null;
     this.debugOverlay = null;
     this.animationFrameId = null;
 
@@ -46,6 +48,9 @@ export class Game {
       const graphicsConfig = this.configManager.get('graphics');
       this.renderer = new ResponsiveRenderer(canvasEl, graphicsConfig.preset, graphicsConfig.dprCap);
 
+      this.inputManager = new InputManager(this.containerEl);
+      this._setupInputListeners();
+
       this.debugOverlay = new DebugOverlay(this.containerEl, this);
       
       if (this.configManager.get('debug')) {
@@ -53,7 +58,7 @@ export class Game {
       }
 
       this.initialized = true;
-      logger.info('Game core and renderer successfully initialized.');
+      logger.info('Game core, renderer, and input manager successfully initialized.');
 
       // Auto transition to MENU from BOOT after initialization
       this.stateMachine.transitionTo(STATES.MENU);
@@ -61,6 +66,28 @@ export class Game {
     } catch (err) {
       this.triggerFatalError(`Initialization failed: ${err.message}`);
     }
+  }
+
+  _setupInputListeners() {
+    if (!this.inputManager) return;
+
+    this.inputManager.onAction((action, payload) => {
+      if (!this.renderer || !this.renderer.sceneFactory || !this.renderer.sceneFactory.playerController) return;
+
+      const player = this.renderer.sceneFactory.playerController;
+
+      switch (action) {
+        case 'MOVE_LEFT':
+          player.moveLeft();
+          break;
+        case 'MOVE_RIGHT':
+          player.moveRight();
+          break;
+        case 'JUMP':
+          player.jump();
+          break;
+      }
+    });
   }
 
   setQualityPreset(preset) {
