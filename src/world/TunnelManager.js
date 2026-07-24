@@ -1,6 +1,7 @@
 /**
  * Endless Tunnel World Manager
- * Manages segment pool, continuous movement, validated pattern library generation, and object recycling.
+ * Manages segment pool, continuous movement, difficulty director integration,
+ * validated pattern library generation, and object recycling.
  */
 
 import { ObjectPool } from './ObjectPools.js';
@@ -8,6 +9,7 @@ import { TunnelSegment } from './TunnelSegment.js';
 import { SeededRNG } from './SeededRNG.js';
 import { PatternLibrary } from './PatternLibrary.js';
 import { ReachabilityValidator } from './ReachabilityValidator.js';
+import { DifficultyDirector } from '../gameplay/DifficultyDirector.js';
 import { logger } from '../services/Logger.js';
 
 export class TunnelManager {
@@ -17,6 +19,7 @@ export class TunnelManager {
     this.rng = new SeededRNG(seed);
     this.patternLibrary = new PatternLibrary();
     this.validator = new ReachabilityValidator();
+    this.difficultyDirector = new DifficultyDirector();
     
     this.segmentLength = 10;
     this.visibleSegmentsCount = 15;
@@ -36,6 +39,7 @@ export class TunnelManager {
 
   initWorld() {
     this.clearWorld();
+    this.difficultyDirector.reset();
 
     for (let i = 0; i < this.visibleSegmentsCount; i++) {
       this._spawnNextSegment(i * -this.segmentLength);
@@ -55,8 +59,14 @@ export class TunnelManager {
     segment.reset(this.totalSegmentsSpawned, isRest);
     segment.meshGroup.position.z = targetZ;
 
-    // Seed obstacle patterns after initial safe runway (segments 1-3)
-    if (this.totalSegmentsSpawned > 3 && !isRest) {
+    // Apply difficulty tier transitions ONLY at safe rest segments
+    if (isRest) {
+      const transitioned = this.difficultyDirector.applyPendingTierTransition();
+      if (transitioned) {
+        logger.info(`Difficulty Tier advanced to: ${this.difficultyDirector.currentTier.name}`, this.difficultyDirector.stats);
+      }
+      this.lastPattern = this.patternLibrary.getPattern('safe_runway');
+    } else if (this.totalSegmentsSpawned > 3) {
       this._populateValidatedPattern(segment);
     } else {
       this.lastPattern = this.patternLibrary.getPattern('safe_runway');
@@ -67,10 +77,11 @@ export class TunnelManager {
   }
 
   _populateValidatedPattern(segment) {
-    let candidatePattern = this.patternLibrary.getRandomPattern(this.rng, 2);
+    const currentTier = this.difficultyDirector.currentTier;
+    let candidatePattern = this.patternLibrary.getRandomPattern(this.rng, currentTier.maxPatternDifficulty);
     
     // Validate reachability from previous pattern
-    const valResult = this.validator.validateTransition(this.lastPattern, candidatePattern, 20);
+    const valResult = this.validator.validateTransition(this.lastPattern, candidatePattern, this.difficultyDirector.currentSpeed);
     if (!valResult.valid) {
       logger.warn(`ReachabilityValidator rejected pattern transition from ${this.lastPattern?.id} to ${candidatePattern.id}. Fallback to safe_runway.`);
       candidatePattern = this.patternLibrary.getPattern('safe_runway');
@@ -107,7 +118,10 @@ export class TunnelManager {
     }
   }
 
-  update(delta, speed = 20) {
+  update(delta) {
+    this.difficultyDirector.update(delta);
+
+    const speed = this.difficultyDirector.currentSpeed;
     const moveDistance = delta * speed;
 
     for (let i = 0; i < this.activeSegments.length; i++) {
@@ -153,7 +167,10 @@ export class TunnelManager {
       active: this.activeSegments.length,
       pooled: this.segmentPool.stats.pooled,
       totalSpawned: this.totalSegmentsSpawned,
-      seed: this.rng.initialSeed
+      seed: this.rng.initialSeed,
+      tier: this.difficultyDirector.currentTier.name,
+      distance: Math.floor(this.difficultyDirector.distanceCovered),
+      speed: parseFloat(this.difficultyDirector.currentSpeed.toFixed(1))
     };
   }
 

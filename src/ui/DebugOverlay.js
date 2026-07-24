@@ -45,6 +45,16 @@ export class DebugOverlay {
       </div>
       <div id="debug-stats-content">Initializing stats...</div>
       <div style="margin-top: 6px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 4px;">
+        <label style="font-size: 9px; color: #9d4edd;">Difficulty Tier Jump:</label>
+        <div style="display: flex; gap: 2px; margin-top: 2px;">
+          <button id="tier-1-btn" style="flex: 1; background: rgba(0, 243, 255, 0.15); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 2px 0;">T1</button>
+          <button id="tier-2-btn" style="flex: 1; background: rgba(0, 243, 255, 0.15); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 2px 0;">T2</button>
+          <button id="tier-3-btn" style="flex: 1; background: rgba(0, 243, 255, 0.15); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 2px 0;">T3</button>
+          <button id="tier-4-btn" style="flex: 1; background: rgba(0, 243, 255, 0.15); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 2px 0;">T4</button>
+          <button id="tier-5-btn" style="flex: 1; background: rgba(0, 243, 255, 0.15); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 2px 0;">T5</button>
+        </div>
+      </div>
+      <div style="margin-top: 6px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 4px;">
         <label style="font-size: 9px; color: #9d4edd;">Pattern Gallery:</label>
         <select id="pattern-gallery-select" style="width: 100%; background: #070913; color: #00f3ff; border: 1px solid #00f3ff; font-size: 9px; padding: 2px; margin-top: 2px;">
           <option value="safe_runway">Safe Runway</option>
@@ -72,6 +82,14 @@ export class DebugOverlay {
     this.overlayEl.querySelector('#preset-low-btn').addEventListener('click', () => this.game.setQualityPreset('low'));
     this.overlayEl.querySelector('#preset-med-btn').addEventListener('click', () => this.game.setQualityPreset('medium'));
     this.overlayEl.querySelector('#preset-high-btn').addEventListener('click', () => this.game.setQualityPreset('high'));
+
+    [1, 2, 3, 4, 5].forEach(t => {
+      this.overlayEl.querySelector(`#tier-${t}-btn`).addEventListener('click', () => {
+        if (this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
+          this.game.renderer.sceneFactory.tunnelManager.difficultyDirector.setTierDirectly(t);
+        }
+      });
+    });
     
     this.overlayEl.querySelector('#pattern-gallery-select').addEventListener('change', (e) => {
       const selectedId = e.target.value;
@@ -119,13 +137,14 @@ export class DebugOverlay {
 
     const rendererInfo = this.game.renderer ? this.game.renderer.info : { drawCalls: 0, triangles: 0, preset: 'N/A', dpr: 1 };
     
-    let poolStats = { active: 0, pooled: 0, totalSpawned: 0 };
+    let poolStats = { active: 0, pooled: 0, totalSpawned: 0, tier: 'CALM', distance: 0, speed: 15.0 };
     if (this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
       poolStats = this.game.renderer.sceneFactory.tunnelManager.stats;
     }
 
     this.statsEl.innerHTML = `
-      <div><strong>State:</strong> <span style="color: #fff;">${state}</span> | <strong>Preset:</strong> <span style="color: #9d4edd;">${rendererInfo.preset}</span></div>
+      <div><strong>State:</strong> <span style="color: #fff;">${state}</span> | <strong>Tier:</strong> <span style="color: #00f3ff;">${poolStats.tier}</span></div>
+      <div><strong>Dist:</strong> ${poolStats.distance}m | <strong>Speed:</strong> ${poolStats.speed} m/s</div>
       <div><strong>FPS:</strong> ${this.currentFps} FPS | <strong>Delta:</strong> ${delta}ms</div>
       <div><strong>Elapsed:</strong> ${elapsed}s | <strong>DPR:</strong> ${rendererInfo.dpr}</div>
       <div><strong>Calls:</strong> ${rendererInfo.drawCalls} | <strong>Tris:</strong> ${rendererInfo.triangles}</div>
