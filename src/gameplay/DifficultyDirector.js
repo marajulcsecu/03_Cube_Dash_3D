@@ -9,51 +9,51 @@ export const DIFFICULTY_TIERS = [
     tier: 1,
     name: 'CALM',
     minDistance: 0,
-    maxDistance: 300,
+    maxDistance: 500,  // Score 0 - 5,000
     speed: 15.0,
     maxPatternDifficulty: 1,
     particleRate: 40,
-    fogDensity: 0.005
+    fogDensity: 0.003
   },
   {
     tier: 2,
     name: 'FLOW',
-    minDistance: 300,
-    maxDistance: 700,
-    speed: 20.0,
+    minDistance: 500,
+    maxDistance: 1200, // Score 5,000 - 12,000
+    speed: 19.0,
     maxPatternDifficulty: 2,
     particleRate: 100,
-    fogDensity: 0.007
+    fogDensity: 0.005
   },
   {
     tier: 3,
     name: 'FOCUS',
-    minDistance: 700,
-    maxDistance: 1200,
-    speed: 24.0,
-    maxPatternDifficulty: 2,
+    minDistance: 1200,
+    maxDistance: 2500, // Score 12,000 - 25,000
+    speed: 23.0,
+    maxPatternDifficulty: 3,
     particleRate: 160,
-    fogDensity: 0.009
+    fogDensity: 0.007
   },
   {
     tier: 4,
     name: 'EXPERT',
-    minDistance: 1200,
-    maxDistance: 1800,
-    speed: 28.0,
-    maxPatternDifficulty: 3,
+    minDistance: 2500,
+    maxDistance: 4500, // Score 25,000 - 45,000
+    speed: 27.0,
+    maxPatternDifficulty: 4,
     particleRate: 220,
-    fogDensity: 0.011
+    fogDensity: 0.009
   },
   {
     tier: 5,
     name: 'MASTERY',
-    minDistance: 1800,
-    maxDistance: Infinity,
+    minDistance: 4500,
+    maxDistance: Infinity, // Score 45,000+
     speed: 30.0, // CAPPED HARD MAXIMUM SPEED
-    maxPatternDifficulty: 3,
+    maxPatternDifficulty: 5,
     particleRate: 280,
-    fogDensity: 0.013
+    fogDensity: 0.011
   }
 ];
 

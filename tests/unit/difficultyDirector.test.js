@@ -15,15 +15,15 @@ describe('DifficultyDirector Unit Tests', () => {
   });
 
   it('should advance difficulty tiers based on distance covered', () => {
-    // Simulate distance up to 350m (Tier 2 FLOW trigger)
-    director.update(25.0); // 15 m/s * 25s = 375m
+    // Simulate distance up to 525m (Tier 2 FLOW trigger at 500m)
+    director.update(35.0); // 15 m/s * 35s = 525m
     expect(director.pendingTierChange).toBe(true);
 
     // Transition applied ONLY at safe rest segment
     const applied = director.applyPendingTierTransition();
     expect(applied).toBe(true);
     expect(director.currentTier.name).toBe('FLOW');
-    expect(director.targetSpeed).toBe(20.0);
+    expect(director.targetSpeed).toBe(19.0);
   });
 
   it('should enforce hard speed cap at 30 m/s in Mastery Tier', () => {
@@ -41,10 +41,10 @@ describe('DifficultyDirector Unit Tests', () => {
   it('should allow instant tier jumps via debug panel controls', () => {
     director.setTierDirectly(3); // FOCUS
     expect(director.currentTier.name).toBe('FOCUS');
-    expect(director.targetSpeed).toBe(24.0);
+    expect(director.targetSpeed).toBe(23.0);
 
     director.setTierDirectly(4); // EXPERT
     expect(director.currentTier.name).toBe('EXPERT');
-    expect(director.targetSpeed).toBe(28.0);
+    expect(director.targetSpeed).toBe(27.0);
   });
 });
