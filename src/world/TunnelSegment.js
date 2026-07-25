@@ -221,47 +221,96 @@ export class TunnelSegment {
 
   _addAlienMonster(laneIndex, relativeZ = 0, scale = 1.0) {
     const targetX = this.getLaneX(laneIndex);
-    const width = 1.8 * scale, height = 2.0 * scale, depth = 1.4 * scale;
+    const width = 1.8 * scale, height = 2.0 * scale, depth = 1.6 * scale;
     const y = 1.25 * scale;
 
     const monsterGroup = new THREE.Group();
     monsterGroup.name = 'CyberAlienMonster';
 
-    // 1. Biomechanical Head Dome (Sphere)
-    const headGeo = new THREE.SphereGeometry(0.55 * scale, 12, 12);
-    const bioMat = this.materialFactory.get('alienMonsterBio');
-    const headMesh = new THREE.Mesh(headGeo, bioMat);
-    monsterGroup.add(headMesh);
+    // Materials
+    const skinMat = new THREE.MeshStandardMaterial({
+      color: 0x1f0c38,
+      emissive: 0x3d004d,
+      emissiveIntensity: 0.8,
+      roughness: 0.3,
+      metalness: 0.7,
+      flatShading: true
+    });
 
-    // 2. Bioluminescent Glowing Eye (Front Sphere)
-    const eyeGeo = new THREE.SphereGeometry(0.25 * scale, 10, 10);
+    const mawMat = new THREE.MeshStandardMaterial({
+      color: 0x550011,
+      emissive: 0x990022,
+      emissiveIntensity: 1.2,
+      roughness: 0.5
+    });
+
     const eyeMat = new THREE.MeshStandardMaterial({
-      color: 0xff0066,
-      emissive: 0xff0066,
-      emissiveIntensity: 2.0,
+      color: 0xffcc00,
+      emissive: 0xffaa00,
+      emissiveIntensity: 2.5,
       roughness: 0.1
     });
-    const eyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeMesh.position.set(0, 0.05 * scale, 0.45 * scale);
-    monsterGroup.add(eyeMesh);
 
-    // 3. Side Cyber-Tentacles / Mandibles (Cylinders)
-    const tentacleMat = this.materialFactory.get('violetEmissive');
-    [-0.55, 0.55].forEach(sideX => {
-      const tentGeo = new THREE.CylinderGeometry(0.05 * scale, 0.02 * scale, 0.75 * scale, 8);
-      const tentMesh = new THREE.Mesh(tentGeo, tentacleMat);
-      tentMesh.rotation.z = sideX > 0 ? -Math.PI / 4 : Math.PI / 4;
-      tentMesh.position.set(sideX * scale, -0.2 * scale, 0.1 * scale);
-      monsterGroup.add(tentMesh);
+    const fangMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffeeaa,
+      emissiveIntensity: 1.0,
+      roughness: 0.2
     });
 
-    // 4. Plasma Jet Thruster Core (Belly Light)
-    const jetGeo = new THREE.ConeGeometry(0.25 * scale, 0.5 * scale, 8);
-    const jetMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true });
-    const jetMesh = new THREE.Mesh(jetGeo, jetMat);
-    jetMesh.rotation.x = Math.PI;
-    jetMesh.position.set(0, -0.45 * scale, 0);
-    monsterGroup.add(jetMesh);
+    // 1. Spiked Main Head Skull (Dodecahedron)
+    const headGeo = new THREE.DodecahedronGeometry(0.6 * scale, 1);
+    const headMesh = new THREE.Mesh(headGeo, skinMat);
+    headMesh.scale.set(1.0, 0.9, 1.2);
+    monsterGroup.add(headMesh);
+
+    // 2. Open Roaring Mouth Cavity (Dark Crimson Box)
+    const mouthGeo = new THREE.BoxGeometry(0.7 * scale, 0.4 * scale, 0.5 * scale);
+    const mouthMesh = new THREE.Mesh(mouthGeo, mawMat);
+    mouthMesh.position.set(0, -0.1 * scale, 0.35 * scale);
+    monsterGroup.add(mouthMesh);
+
+    // 3. Sharp Upper & Lower Fangs/Teeth (Cones)
+    const upperJawGroup = new THREE.Group();
+    [-0.22, -0.07, 0.07, 0.22].forEach(fx => {
+      const fangGeo = new THREE.ConeGeometry(0.04 * scale, 0.22 * scale, 4);
+      const topFang = new THREE.Mesh(fangGeo, fangMat);
+      topFang.rotation.x = Math.PI;
+      topFang.position.set(fx * scale, 0.08 * scale, 0.55 * scale);
+      upperJawGroup.add(topFang);
+
+      const botFang = new THREE.Mesh(fangGeo, fangMat);
+      botFang.position.set(fx * scale, -0.25 * scale, 0.55 * scale);
+      upperJawGroup.add(botFang);
+    });
+    monsterGroup.add(upperJawGroup);
+
+    // 4. Dual Glowing Yellow Predator Eyes (Spheres set in sockets)
+    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.12 * scale, 8, 8), eyeMat);
+    leftEye.position.set(-0.25 * scale, 0.22 * scale, 0.48 * scale);
+    monsterGroup.add(leftEye);
+
+    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.12 * scale, 8, 8), eyeMat);
+    rightEye.position.set(0.25 * scale, 0.22 * scale, 0.48 * scale);
+    monsterGroup.add(rightEye);
+
+    // 5. Menacing Side Horns / Spikes (Cones)
+    [-0.6, 0.6].forEach(hx => {
+      const hornGeo = new THREE.ConeGeometry(0.08 * scale, 0.65 * scale, 5);
+      const hornMesh = new THREE.Mesh(hornGeo, skinMat);
+      hornMesh.rotation.z = hx > 0 ? -Math.PI / 3 : Math.PI / 3;
+      hornMesh.rotation.x = -Math.PI / 6;
+      hornMesh.position.set(hx * scale, 0.35 * scale, 0.1 * scale);
+      monsterGroup.add(hornMesh);
+    });
+
+    // 6. Threat Aura Wireframe Ring (Red Warning Glow)
+    const auraGeo = new THREE.RingGeometry(0.85 * scale, 0.95 * scale, 12);
+    const auraMat = new THREE.MeshBasicMaterial({ color: 0xff0044, wireframe: true, side: THREE.DoubleSide });
+    const auraMesh = new THREE.Mesh(auraGeo, auraMat);
+    auraMesh.rotation.x = Math.PI / 2;
+    auraMesh.position.set(0, -0.6 * scale, 0);
+    monsterGroup.add(auraMesh);
 
     // Start flying in from deep space on far left/right!
     const startX = targetX >= 0 ? 14.0 : -14.0;
@@ -272,7 +321,7 @@ export class TunnelSegment {
     const obstacleObj = {
       x: startX, targetX, y, relativeZ, width, height, depth,
       type: 'alien_monster', active: true, mesh: monsterGroup,
-      eyeMesh,
+      leftEye, rightEye, upperJawGroup,
       hoverPhase: Math.random() * Math.PI * 2,
       entryProgress: 0.0
     };
@@ -331,11 +380,22 @@ export class TunnelSegment {
             obstacle.mesh.position.x = obstacle.x;
           }
 
-          // Continuous floating hover & eye pulse
-          obstacle.hoverPhase += delta * 3.0;
+          // Continuous floating hover & jaws champing animation
+          obstacle.hoverPhase += delta * 3.5;
           obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.25;
-          if (obstacle.eyeMesh && obstacle.eyeMesh.material) {
-            obstacle.eyeMesh.material.emissiveIntensity = 1.5 + Math.sin(obstacle.hoverPhase * 2.0) * 0.8;
+
+          // Roaring jaw champing
+          if (obstacle.upperJawGroup) {
+            obstacle.upperJawGroup.position.y = Math.sin(obstacle.hoverPhase * 2.5) * 0.08;
+          }
+
+          // Eye pulse
+          if (obstacle.leftEye && obstacle.leftEye.material) {
+            const pulse = 2.0 + Math.sin(obstacle.hoverPhase * 3.0) * 0.8;
+            obstacle.leftEye.material.emissiveIntensity = pulse;
+            if (obstacle.rightEye && obstacle.rightEye.material) {
+              obstacle.rightEye.material.emissiveIntensity = pulse;
+            }
           }
         }
       }

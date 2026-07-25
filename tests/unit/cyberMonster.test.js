@@ -28,7 +28,8 @@ describe('Step 2: Cyber-Alien Space Monster 3D Obstacle Unit Tests', () => {
     expect(monster.type).toBe('alien_monster');
     expect(monster.active).toBe(true);
     expect(monster.mesh.name).toBe('CyberAlienMonster');
-    expect(monster.eyeMesh).toBeDefined();
+    expect(monster.leftEye).toBeDefined();
+    expect(monster.upperJawGroup).toBeDefined();
   });
 
   it('should animate fly-in entry from deep space and hover oscillation frame by frame', () => {
