@@ -94,6 +94,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.LASER_GRID:
         this._addLaserGrid(hazardConfig.lane || 2, relativeZ, hazardConfig.heightY || 1.1, hazardConfig.isSweeping || false);
         break;
+      case OBSTACLE_TYPES.PLASMA_ROTOR:
+        this._addPlasmaRotor(hazardConfig.lane || 2, relativeZ, hazardConfig.spinSpeed || 6.5);
+        break;
     }
   }
 
@@ -391,6 +394,67 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addPlasmaRotor(laneIndex, relativeZ = 0, spinSpeed = 6.5) {
+    const x = this.getLaneX(laneIndex);
+    const radius = 1.1;
+    const width = radius * 2.0, height = radius * 2.0, depth = 0.4;
+    const y = 1.1;
+
+    const rotorGroup = new THREE.Group();
+    rotorGroup.name = 'PlasmaSawRotor';
+
+    // 1. Central Mechanical Axle Hub (Cylinder)
+    const hubGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.35, 12);
+    hubGeo.rotateX(Math.PI / 2);
+    const hubMat = this.materialFactory.get('tunnelWall');
+    const hubMesh = new THREE.Mesh(hubGeo, hubMat);
+    rotorGroup.add(hubMesh);
+
+    // Glowing Yellow Electric Core Sphere
+    const coreGeo = new THREE.SphereGeometry(0.18, 10, 10);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0xffff00,
+      emissive: 0xffff00,
+      emissiveIntensity: 2.5,
+      roughness: 0.1
+    });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    rotorGroup.add(coreMesh);
+
+    // 2. 3 High-Speed Plasma Saw Blades (Angled Cones spaced 120deg)
+    const bladeMat = this.materialFactory.get('plasmaRotorBlade');
+    const spinningRotorMesh = new THREE.Group();
+
+    for (let i = 0; i < 3; i++) {
+      const angle = (i * Math.PI * 2) / 3;
+      const bladeGeo = new THREE.ConeGeometry(0.22, 1.05, 4);
+      bladeGeo.rotateX(Math.PI / 2);
+      const bladeMesh = new THREE.Mesh(bladeGeo, bladeMat);
+
+      bladeMesh.position.set(Math.cos(angle) * 0.55, Math.sin(angle) * 0.55, 0);
+      bladeMesh.rotation.z = angle + Math.PI / 2;
+      spinningRotorMesh.add(bladeMesh);
+    }
+    rotorGroup.add(spinningRotorMesh);
+
+    // 3. Outer Protective Energy Sheath Ring
+    const ringGeo = new THREE.RingGeometry(1.05, 1.12, 16);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffaa00, wireframe: true, side: THREE.DoubleSide });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    rotorGroup.add(ringMesh);
+
+    rotorGroup.position.set(x, y, relativeZ);
+    this.obstacleGroup.add(rotorGroup);
+
+    const obstacleObj = {
+      x, y, relativeZ, width, height, depth,
+      type: 'plasma_rotor', active: true, mesh: rotorGroup,
+      spinningRotorMesh, coreMesh,
+      spinSpeed
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -474,6 +538,14 @@ export class TunnelSegment {
             obstacle.y = sweepY;
             obstacle.beamMesh.position.y = sweepY;
             obstacle.sheathMesh.position.y = sweepY;
+          }
+        } else if (obstacle.type === 'plasma_rotor' && obstacle.mesh) {
+          // Continuous 360-degree high-speed plasma saw rotation
+          if (obstacle.spinningRotorMesh) {
+            obstacle.spinningRotorMesh.rotation.z += delta * obstacle.spinSpeed;
+          }
+          if (obstacle.coreMesh && obstacle.coreMesh.material) {
+            obstacle.coreMesh.material.emissiveIntensity = 2.0 + Math.sin(performance.now() * 0.01) * 0.8;
           }
         }
       }

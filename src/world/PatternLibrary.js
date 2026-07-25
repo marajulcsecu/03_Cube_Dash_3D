@@ -15,6 +15,7 @@ export const OBSTACLE_TYPES = {
   ASTEROID: 'asteroid',
   ALIEN_MONSTER: 'alien_monster',
   LASER_GRID: 'laser_grid',
+  PLASMA_ROTOR: 'plasma_rotor',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -265,6 +266,19 @@ export const PATTERNS = [
       { type: OBSTACLE_TYPES.LASER_GRID, lane: 0, heightY: 1.1, isSweeping: true },
       { type: OBSTACLE_TYPES.LASER_GRID, lane: 4, heightY: 1.1, isSweeping: true },
       { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'plasma_rotor_center_saw',
+    name: 'Spinning 3-Blade Plasma Saw',
+    difficulty: 3,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.PLASMA_ROTOR, lane: 2, spinSpeed: 6.5 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
   {

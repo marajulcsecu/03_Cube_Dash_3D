@@ -95,6 +95,16 @@ export class MaterialFactory {
       transparent: true,
       opacity: 0.6
     }));
+
+    // Plasma Saw Blade Edge Material (blinding electric amber glow)
+    this.materials.set('plasmaRotorBlade', new THREE.MeshStandardMaterial({
+      color: 0xff6600,
+      emissive: 0xffaa00,
+      emissiveIntensity: 1.6,
+      roughness: 0.1,
+      metalness: 0.9,
+      flatShading: true
+    }));
   }
 
   get(name) {
