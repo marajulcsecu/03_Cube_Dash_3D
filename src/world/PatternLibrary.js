@@ -14,6 +14,7 @@ export const OBSTACLE_TYPES = {
   CRUSHER_FRAME: 'crusher_frame',
   ASTEROID: 'asteroid',
   ALIEN_MONSTER: 'alien_monster',
+  LASER_GRID: 'laser_grid',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -225,6 +226,19 @@ export const PATTERNS = [
       { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
+  {
+    id: 'laser_grid_single_lane',
+    name: 'Cyberpunk Laser Beam Gate',
+    difficulty: 2,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.LASER_GRID, lane: 2, heightY: 1.1, isSweeping: false },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+    ]
+  },
 
   // ── TIER 3 PATTERNS (FOCUS: Difficulty 3 - Dynamic Gates & Pits) ─────
   {
@@ -237,6 +251,20 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.MOVING_GATE, minLane: 0, maxLane: 4, speed: 3.2, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'laser_grid_sweeper_pair',
+    name: 'Sweeping Twin Laser Beams',
+    difficulty: 3,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [1, 2, 3],
+    hazards: [
+      { type: OBSTACLE_TYPES.LASER_GRID, lane: 0, heightY: 1.1, isSweeping: true },
+      { type: OBSTACLE_TYPES.LASER_GRID, lane: 4, heightY: 1.1, isSweeping: true },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {

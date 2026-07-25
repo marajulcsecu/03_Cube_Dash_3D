@@ -306,6 +306,35 @@ export class AudioManager {
     } catch (e) {}
   }
 
+  playLaserCrackle() {
+    if (!this._canPlay()) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1400, now);
+      osc.frequency.exponentialRampToValueAtTime(2800, now + 0.15);
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(2000, now);
+      filter.Q.setValueAtTime(5.0, now);
+
+      gain.gain.setValueAtTime(this.volume * 0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } catch (e) {}
+  }
+
   _canPlay() {
     return this.initialized && this.ctx && !this.muted && this.ctx.state === 'running';
   }

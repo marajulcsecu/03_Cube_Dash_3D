@@ -80,6 +80,21 @@ export class MaterialFactory {
       metalness: 0.7,
       flatShading: true
     }));
+
+    // Cyberpunk Laser Beam Core Material (blinding cyan/magenta plasma)
+    this.materials.set('laserBeamCore', new THREE.MeshBasicMaterial({
+      color: 0x00ffff,
+      transparent: true,
+      opacity: 0.95
+    }));
+
+    // Laser Telegraph Warning Material (flickering warning red)
+    this.materials.set('laserBeamTelegraph', new THREE.MeshBasicMaterial({
+      color: 0xff0044,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.6
+    }));
   }
 
   get(name) {

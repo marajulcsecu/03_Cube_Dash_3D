@@ -91,6 +91,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.ALIEN_MONSTER:
         this._addAlienMonster(hazardConfig.lane || 2, relativeZ, hazardConfig.scale || 1.0);
         break;
+      case OBSTACLE_TYPES.LASER_GRID:
+        this._addLaserGrid(hazardConfig.lane || 2, relativeZ, hazardConfig.heightY || 1.1, hazardConfig.isSweeping || false);
+        break;
     }
   }
 
@@ -328,6 +331,66 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addLaserGrid(laneIndex, relativeZ = 0, heightY = 1.1, isSweeping = false) {
+    const x = this.getLaneX(laneIndex);
+    const width = 1.9, height = 0.4, depth = 0.3;
+
+    const laserGroup = new THREE.Group();
+    laserGroup.name = 'CyberLaserGrid';
+
+    // 1. Twin Metallic Side Emitter Towers
+    const pylonGeo = new THREE.CylinderGeometry(0.12, 0.16, 2.2, 8);
+    const pylonMat = this.materialFactory.get('tunnelWall');
+
+    const leftPylon = new THREE.Mesh(pylonGeo, pylonMat);
+    leftPylon.position.set(-0.95, 1.1, 0);
+    laserGroup.add(leftPylon);
+
+    const rightPylon = new THREE.Mesh(pylonGeo, pylonMat);
+    rightPylon.position.set(0.95, 1.1, 0);
+    laserGroup.add(rightPylon);
+
+    // Glowing Emitter Nodes on top of pylons
+    const nodeGeo = new THREE.SphereGeometry(0.15, 10, 10);
+    const nodeMat = this.materialFactory.get('cyanNeonGrid');
+
+    const leftNode = new THREE.Mesh(nodeGeo, nodeMat);
+    leftNode.position.set(-0.95, 2.1, 0);
+    laserGroup.add(leftNode);
+
+    const rightNode = new THREE.Mesh(nodeGeo, nodeMat);
+    rightNode.position.set(0.95, 2.1, 0);
+    laserGroup.add(rightNode);
+
+    // 2. High-Tech Horizontal Plasma Laser Beam
+    const beamGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.9, 8);
+    beamGeo.rotateZ(Math.PI / 2);
+    const coreMat = this.materialFactory.get('laserBeamCore');
+    const beamMesh = new THREE.Mesh(beamGeo, coreMat);
+    beamMesh.position.set(0, heightY, 0);
+    laserGroup.add(beamMesh);
+
+    // Outer Laser Sheath / Aura
+    const sheathGeo = new THREE.CylinderGeometry(0.12, 0.12, 1.9, 8);
+    sheathGeo.rotateZ(Math.PI / 2);
+    const sheathMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.7 });
+    const sheathMesh = new THREE.Mesh(sheathGeo, sheathMat);
+    sheathMesh.position.set(0, heightY, 0);
+    laserGroup.add(sheathMesh);
+
+    laserGroup.position.set(x, 0, relativeZ);
+    this.obstacleGroup.add(laserGroup);
+
+    const obstacleObj = {
+      x, y: heightY, relativeZ, width, height, depth,
+      type: 'laser_grid', active: true, mesh: laserGroup,
+      beamMesh, sheathMesh,
+      heightY, isSweeping,
+      sweepPhase: Math.random() * Math.PI * 2
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -396,6 +459,21 @@ export class TunnelSegment {
             if (obstacle.rightEye && obstacle.rightEye.material) {
               obstacle.rightEye.material.emissiveIntensity = pulse;
             }
+          }
+        } else if (obstacle.type === 'laser_grid' && obstacle.mesh) {
+          obstacle.sweepPhase = (obstacle.sweepPhase || 0) + delta * 3.0;
+          
+          // Laser beam intensity pulsation
+          if (obstacle.sheathMesh && obstacle.sheathMesh.material) {
+            obstacle.sheathMesh.material.opacity = 0.5 + Math.sin(obstacle.sweepPhase * 4.0) * 0.3;
+          }
+
+          // Vertical beam sweeping (if enabled)
+          if (obstacle.isSweeping && obstacle.beamMesh && obstacle.sheathMesh) {
+            const sweepY = 0.5 + (Math.sin(obstacle.sweepPhase * 1.5) + 1.0) * 0.65;
+            obstacle.y = sweepY;
+            obstacle.beamMesh.position.y = sweepY;
+            obstacle.sheathMesh.position.y = sweepY;
           }
         }
       }
