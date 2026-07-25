@@ -12,6 +12,7 @@ export const OBSTACLE_TYPES = {
   MOVING_GATE: 'moving_gate',
   PULSE_WALL: 'pulse_wall',
   CRUSHER_FRAME: 'crusher_frame',
+  ASTEROID: 'asteroid',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -80,6 +81,19 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.LOW_BARRIER, lane: 2, relativeZ: 0 },
       { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: -2 }
+    ]
+  },
+  {
+    id: 'single_asteroid_center',
+    name: 'Tumbling Cosmic Asteroid',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 2, relativeZ: 0, scale: 1.0 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
   {
@@ -156,6 +170,20 @@ export const PATTERNS = [
       { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
+  {
+    id: 'asteroid_outer_pair',
+    name: 'Twin Tumbling Asteroids',
+    difficulty: 2,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [1, 2, 3],
+    hazards: [
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 0, relativeZ: 0, scale: 1.1 },
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 0, scale: 1.1 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+    ]
+  },
 
   // ── TIER 3 PATTERNS (FOCUS: Difficulty 3 - Dynamic Gates & Pits) ─────
   {
@@ -168,6 +196,20 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.MOVING_GATE, minLane: 0, maxLane: 4, speed: 3.2, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'asteroid_shower_weave',
+    name: 'Asteroid Shower Weave',
+    difficulty: 3,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 2, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 1, relativeZ: -2, scale: 1.0 },
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 3, relativeZ: 1, scale: 1.25 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -199,6 +241,22 @@ export const PATTERNS = [
   },
 
   // ── TIER 4 PATTERNS (EXPERT: Difficulty 4 - Sweeps & Funnels) ────────
+  {
+    id: 'asteroid_apocalypse_blitz',
+    name: 'Cosmic Asteroid Apocalypse',
+    difficulty: 4,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [2],
+    hazards: [
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 0, relativeZ: -1, scale: 1.1 },
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 1, relativeZ: 1, scale: 1.0 },
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 3, relativeZ: -1, scale: 1.0 },
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 1, scale: 1.1 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+    ]
+  },
   {
     id: 'low_barrier_full_sweep',
     name: '5-Lane Low Barrier Sweep',

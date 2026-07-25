@@ -85,6 +85,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.FLOOR_GAP:
         this.addFloorGap(hazardConfig.gapLanes || [0, 1]);
         break;
+      case OBSTACLE_TYPES.ASTEROID:
+        this._addAsteroid(hazardConfig.lane || 2, relativeZ, hazardConfig.scale || 1.0);
+        break;
     }
   }
 
@@ -169,6 +172,50 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addAsteroid(laneIndex, relativeZ = 0, sizeScale = 1.0) {
+    const x = this.getLaneX(laneIndex);
+    const radius = 0.95 * sizeScale;
+    const y = radius + 0.15;
+
+    const width = radius * 2.0, height = radius * 2.0, depth = radius * 2.0;
+
+    // Create craggy 3D asteroid geometry with perturbed vertices
+    const geo = new THREE.DodecahedronGeometry(radius, 1);
+    const posAttr = geo.attributes.position;
+    for (let i = 0; i < posAttr.count; i++) {
+      const vx = posAttr.getX(i);
+      const vy = posAttr.getY(i);
+      const vz = posAttr.getZ(i);
+      const noise = 1.0 + (Math.sin(vx * 3.0 + vy * 5.0 + vz * 2.0) * 0.15);
+      posAttr.setXYZ(i, vx * noise, vy * noise, vz * noise);
+    }
+    geo.computeVertexNormals();
+
+    const mat = this.materialFactory.get('asteroidRock');
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, relativeZ);
+
+    // Give mesh a molten orange wireframe rim
+    const wireMat = new THREE.MeshBasicMaterial({ color: 0xff6600, wireframe: true, transparent: true, opacity: 0.35 });
+    const wireMesh = new THREE.Mesh(geo, wireMat);
+    wireMesh.scale.set(1.02, 1.02, 1.02);
+    mesh.add(wireMesh);
+
+    // Initial random rotation angles
+    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+
+    this.obstacleGroup.add(mesh);
+
+    const obstacleObj = {
+      x, y, relativeZ, width, height, depth,
+      type: 'asteroid', active: true, mesh,
+      rotSpeedX: (Math.random() - 0.5) * 2.5,
+      rotSpeedY: (Math.random() - 0.5) * 3.5,
+      rotSpeedZ: (Math.random() - 0.5) * 2.0
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -208,6 +255,10 @@ export class TunnelSegment {
           obstacle.phase = (obstacle.phase || 0) + delta * obstacle.frequency;
           const scaleY = 1.0 + Math.sin(obstacle.phase) * 0.25;
           obstacle.mesh.scale.set(1.0, scaleY, 1.0);
+        } else if (obstacle.type === 'asteroid' && obstacle.mesh) {
+          obstacle.mesh.rotation.x += delta * obstacle.rotSpeedX;
+          obstacle.mesh.rotation.y += delta * obstacle.rotSpeedY;
+          obstacle.mesh.rotation.z += delta * obstacle.rotSpeedZ;
         }
       }
     }

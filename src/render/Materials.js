@@ -60,6 +60,16 @@ export class MaterialFactory {
       emissiveIntensity: 1.2,
       roughness: 0.1
     }));
+
+    // Meteorite Asteroid Material with molten orange lava core and dark rock surface
+    this.materials.set('asteroidRock', new THREE.MeshStandardMaterial({
+      color: 0x2e2836,
+      emissive: 0xff4400,
+      emissiveIntensity: 0.6,
+      roughness: 0.8,
+      metalness: 0.3,
+      flatShading: true
+    }));
   }
 
   get(name) {
