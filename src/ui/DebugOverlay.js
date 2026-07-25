@@ -59,8 +59,9 @@ export class DebugOverlay {
         <div style="display: flex; gap: 3px; margin-top: 2px; flex-wrap: wrap;">
           <button id="spawn-asteroid-btn" style="flex: 1; min-width: 55px; background: rgba(255, 102, 0, 0.2); color: #ff9900; border: 1px solid #ff6600; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪨 Asteroid</button>
           <button id="spawn-monster-btn" style="flex: 1; min-width: 55px; background: rgba(255, 0, 102, 0.2); color: #ff0066; border: 1px solid #ff0066; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">👾 Monster</button>
-          <button id="spawn-laser-btn" style="flex: 1; min-width: 55px; background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">⚡ Laser</button>
-          <button id="spawn-rotor-btn" style="flex: 1; min-width: 55px; background: rgba(255, 204, 0, 0.2); color: #ffcc00; border: 1px solid #ffcc00; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪓 Saw Rotor</button>
+          <button id="spawn-laser-btn" style="flex: 1; min-width: 50px; background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">⚡ Laser</button>
+          <button id="spawn-rotor-btn" style="flex: 1; min-width: 50px; background: rgba(255, 204, 0, 0.2); color: #ffcc00; border: 1px solid #ffcc00; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪓 Saw Rotor</button>
+          <button id="spawn-wormhole-btn" style="flex: 1; min-width: 50px; background: rgba(157, 78, 221, 0.2); color: #9d4edd; border: 1px solid #9d4edd; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🌀 Wormhole</button>
         </div>
       </div>
       <div style="margin-top: 6px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 4px;">
@@ -110,6 +111,7 @@ export class DebugOverlay {
     this.overlayEl.querySelector('#spawn-monster-btn').addEventListener('click', () => spawnPattern('alien_monster_hover_center'));
     this.overlayEl.querySelector('#spawn-laser-btn').addEventListener('click', () => spawnPattern('laser_grid_single_lane'));
     this.overlayEl.querySelector('#spawn-rotor-btn').addEventListener('click', () => spawnPattern('plasma_rotor_center_saw'));
+    this.overlayEl.querySelector('#spawn-wormhole-btn').addEventListener('click', () => spawnPattern('wormhole_void_center_pit'));
 
     patternSelect.addEventListener('change', (e) => {
       const selectedId = e.target.value;

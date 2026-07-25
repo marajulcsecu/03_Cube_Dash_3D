@@ -16,6 +16,7 @@ export const OBSTACLE_TYPES = {
   ALIEN_MONSTER: 'alien_monster',
   LASER_GRID: 'laser_grid',
   PLASMA_ROTOR: 'plasma_rotor',
+  WORMHOLE_VOID: 'wormhole_void',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -278,6 +279,19 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.PLASMA_ROTOR, lane: 2, spinSpeed: 6.5 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'wormhole_void_center_pit',
+    name: 'Swirling Cosmic Wormhole Pit',
+    difficulty: 3,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.WORMHOLE_VOID, lane: 2, scale: 1.0 },
       { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },

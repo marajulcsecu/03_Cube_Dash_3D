@@ -97,6 +97,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.PLASMA_ROTOR:
         this._addPlasmaRotor(hazardConfig.lane || 2, relativeZ, hazardConfig.spinSpeed || 6.5);
         break;
+      case OBSTACLE_TYPES.WORMHOLE_VOID:
+        this._addWormholeVoid(hazardConfig.lane || 2, relativeZ, hazardConfig.scale || 1.0);
+        break;
     }
   }
 
@@ -455,6 +458,62 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addWormholeVoid(laneIndex, relativeZ = 0, scale = 1.0) {
+    const x = this.getLaneX(laneIndex);
+    const radius = 1.25 * scale;
+    const width = radius * 2.0, height = 0.2, depth = radius * 2.0;
+    const y = 0.05;
+
+    const voidGroup = new THREE.Group();
+    voidGroup.name = 'CosmicWormholeVoid';
+
+    // 1. Accretion Disk Ring (Rotating Cyan/Magenta Mesh)
+    const ringGeo = new THREE.RingGeometry(0.5 * scale, 1.25 * scale, 16);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x9d4edd,
+      wireframe: true,
+      side: THREE.DoubleSide
+    });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.x = Math.PI / 2;
+    voidGroup.add(ringMesh);
+
+    // 2. Abyssal Portal Core (Dark Circle)
+    const coreGeo = new THREE.CircleGeometry(0.55 * scale, 16);
+    const coreMat = this.materialFactory.get('wormholeVortex');
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    coreMesh.rotation.x = -Math.PI / 2;
+    coreMesh.position.y = -0.02;
+    voidGroup.add(coreMesh);
+
+    // 3. Swirling Gravitational Particle Accretion Spec Group
+    const particleGroup = new THREE.Group();
+    const specMat = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+    for (let i = 0; i < 8; i++) {
+      const specAngle = (i * Math.PI * 2) / 8;
+      const specRadius = (0.7 + (i % 3) * 0.15) * scale;
+      const specGeo = new THREE.SphereGeometry(0.06 * scale, 6, 6);
+      const specMesh = new THREE.Mesh(specGeo, specMat);
+      specMesh.position.set(Math.cos(specAngle) * specRadius, Math.sin(specAngle) * specRadius, 0);
+      particleGroup.add(specMesh);
+    }
+    particleGroup.rotation.x = Math.PI / 2;
+    voidGroup.add(particleGroup);
+
+    voidGroup.position.set(x, y, relativeZ);
+    this.obstacleGroup.add(voidGroup);
+
+    // Also mark lane as floor gap in collision system!
+    this.addFloorGap([laneIndex]);
+
+    const obstacleObj = {
+      x, y, relativeZ, width, height, depth,
+      type: 'wormhole_void', active: true, mesh: voidGroup,
+      ringMesh, particleGroup
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -546,6 +605,14 @@ export class TunnelSegment {
           }
           if (obstacle.coreMesh && obstacle.coreMesh.material) {
             obstacle.coreMesh.material.emissiveIntensity = 2.0 + Math.sin(performance.now() * 0.01) * 0.8;
+          }
+        } else if (obstacle.type === 'wormhole_void' && obstacle.mesh) {
+          // Continuous swirling accretion rotation
+          if (obstacle.ringMesh) {
+            obstacle.ringMesh.rotation.z += delta * 2.5;
+          }
+          if (obstacle.particleGroup) {
+            obstacle.particleGroup.rotation.z -= delta * 4.0;
           }
         }
       }

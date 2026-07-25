@@ -105,6 +105,16 @@ export class MaterialFactory {
       metalness: 0.9,
       flatShading: true
     }));
+
+    // Cosmic Wormhole Void Core Material (deep spatial vortex black hole)
+    this.materials.set('wormholeVortex', new THREE.MeshStandardMaterial({
+      color: 0x050014,
+      emissive: 0x6600cc,
+      emissiveIntensity: 1.2,
+      roughness: 0.2,
+      metalness: 0.8,
+      flatShading: true
+    }));
   }
 
   get(name) {
