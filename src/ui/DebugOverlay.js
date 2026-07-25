@@ -55,16 +55,18 @@ export class DebugOverlay {
         </div>
       </div>
       <div style="margin-top: 6px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 4px;">
+        <label style="font-size: 9px; color: #ff00aa;">Instant Obstacle Spawn:</label>
+        <div style="display: flex; gap: 3px; margin-top: 2px; flex-wrap: wrap;">
+          <button id="spawn-asteroid-btn" style="flex: 1; min-width: 55px; background: rgba(255, 102, 0, 0.2); color: #ff9900; border: 1px solid #ff6600; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪨 Asteroid</button>
+          <button id="spawn-monster-btn" style="flex: 1; min-width: 55px; background: rgba(255, 0, 102, 0.2); color: #ff0066; border: 1px solid #ff0066; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">👾 Monster</button>
+          <button id="spawn-laser-btn" style="flex: 1; min-width: 55px; background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">⚡ Laser</button>
+          <button id="spawn-rotor-btn" style="flex: 1; min-width: 55px; background: rgba(255, 204, 0, 0.2); color: #ffcc00; border: 1px solid #ffcc00; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪓 Saw Rotor</button>
+        </div>
+      </div>
+      <div style="margin-top: 6px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 4px;">
         <label style="font-size: 9px; color: #9d4edd;">Pattern Gallery:</label>
         <select id="pattern-gallery-select" style="width: 100%; background: #070913; color: #00f3ff; border: 1px solid #00f3ff; font-size: 9px; padding: 2px; margin-top: 2px;">
           <option value="safe_runway">Safe Runway</option>
-          <option value="center_wall_outer_shards">Center Wall & Side Shards</option>
-          <option value="low_barrier_leap">Center Low Barrier Leap</option>
-          <option value="moving_gate_oscillator">Moving Gate Oscillator</option>
-          <option value="pulse_wall_beat">Expanding Pulse Wall</option>
-          <option value="crusher_frame_arch">Overhead Crusher Arch</option>
-          <option value="side_gaps_center_bridge">Side Floor Gaps</option>
-          <option value="diagonal_shard_weave">Diagonal Shard Weave</option>
         </select>
       </div>
       <div style="margin-top: 8px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
@@ -97,6 +99,17 @@ export class DebugOverlay {
         }
       });
     });
+
+    const spawnPattern = (patternId) => {
+      if (this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
+        this.game.renderer.sceneFactory.tunnelManager.spawnSpecificPattern(patternId);
+      }
+    };
+
+    this.overlayEl.querySelector('#spawn-asteroid-btn').addEventListener('click', () => spawnPattern('single_asteroid_center'));
+    this.overlayEl.querySelector('#spawn-monster-btn').addEventListener('click', () => spawnPattern('alien_monster_hover_center'));
+    this.overlayEl.querySelector('#spawn-laser-btn').addEventListener('click', () => spawnPattern('laser_grid_single_lane'));
+    this.overlayEl.querySelector('#spawn-rotor-btn').addEventListener('click', () => spawnPattern('plasma_rotor_center_saw'));
 
     patternSelect.addEventListener('change', (e) => {
       const selectedId = e.target.value;
