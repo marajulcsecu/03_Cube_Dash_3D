@@ -70,6 +70,16 @@ export class MaterialFactory {
       metalness: 0.3,
       flatShading: true
     }));
+
+    // Biomechanical Alien Monster Material (deep violet hull with neon magenta eye glow)
+    this.materials.set('alienMonsterBio', new THREE.MeshStandardMaterial({
+      color: 0x1f0c38,
+      emissive: 0xff0066,
+      emissiveIntensity: 1.1,
+      roughness: 0.2,
+      metalness: 0.7,
+      flatShading: true
+    }));
   }
 
   get(name) {

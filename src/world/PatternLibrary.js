@@ -13,6 +13,7 @@ export const OBSTACLE_TYPES = {
   PULSE_WALL: 'pulse_wall',
   CRUSHER_FRAME: 'crusher_frame',
   ASTEROID: 'asteroid',
+  ALIEN_MONSTER: 'alien_monster',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -211,6 +212,19 @@ export const PATTERNS = [
       { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
+  {
+    id: 'alien_monster_hover_center',
+    name: 'Hovering Cyber Alien Drone',
+    difficulty: 2,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.ALIEN_MONSTER, lane: 2, relativeZ: 0, scale: 1.0 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+    ]
+  },
 
   // ── TIER 3 PATTERNS (FOCUS: Difficulty 3 - Dynamic Gates & Pits) ─────
   {
@@ -223,6 +237,20 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.MOVING_GATE, minLane: 0, maxLane: 4, speed: 3.2, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'alien_monster_flank_pair',
+    name: 'Flanking Cyber Monster Pair',
+    difficulty: 3,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [1, 2, 3],
+    hazards: [
+      { type: OBSTACLE_TYPES.ALIEN_MONSTER, lane: 0, relativeZ: 0, scale: 1.1 },
+      { type: OBSTACLE_TYPES.ALIEN_MONSTER, lane: 4, relativeZ: 0, scale: 1.1 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {

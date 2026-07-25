@@ -88,6 +88,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.ASTEROID:
         this._addAsteroid(hazardConfig.lane || 2, relativeZ, hazardConfig.scale || 1.0);
         break;
+      case OBSTACLE_TYPES.ALIEN_MONSTER:
+        this._addAlienMonster(hazardConfig.lane || 2, relativeZ, hazardConfig.scale || 1.0);
+        break;
     }
   }
 
@@ -216,6 +219,66 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addAlienMonster(laneIndex, relativeZ = 0, scale = 1.0) {
+    const targetX = this.getLaneX(laneIndex);
+    const width = 1.8 * scale, height = 2.0 * scale, depth = 1.4 * scale;
+    const y = 1.25 * scale;
+
+    const monsterGroup = new THREE.Group();
+    monsterGroup.name = 'CyberAlienMonster';
+
+    // 1. Biomechanical Head Dome (Sphere)
+    const headGeo = new THREE.SphereGeometry(0.55 * scale, 12, 12);
+    const bioMat = this.materialFactory.get('alienMonsterBio');
+    const headMesh = new THREE.Mesh(headGeo, bioMat);
+    monsterGroup.add(headMesh);
+
+    // 2. Bioluminescent Glowing Eye (Front Sphere)
+    const eyeGeo = new THREE.SphereGeometry(0.25 * scale, 10, 10);
+    const eyeMat = new THREE.MeshStandardMaterial({
+      color: 0xff0066,
+      emissive: 0xff0066,
+      emissiveIntensity: 2.0,
+      roughness: 0.1
+    });
+    const eyeMesh = new THREE.Mesh(eyeGeo, eyeMat);
+    eyeMesh.position.set(0, 0.05 * scale, 0.45 * scale);
+    monsterGroup.add(eyeMesh);
+
+    // 3. Side Cyber-Tentacles / Mandibles (Cylinders)
+    const tentacleMat = this.materialFactory.get('violetEmissive');
+    [-0.55, 0.55].forEach(sideX => {
+      const tentGeo = new THREE.CylinderGeometry(0.05 * scale, 0.02 * scale, 0.75 * scale, 8);
+      const tentMesh = new THREE.Mesh(tentGeo, tentacleMat);
+      tentMesh.rotation.z = sideX > 0 ? -Math.PI / 4 : Math.PI / 4;
+      tentMesh.position.set(sideX * scale, -0.2 * scale, 0.1 * scale);
+      monsterGroup.add(tentMesh);
+    });
+
+    // 4. Plasma Jet Thruster Core (Belly Light)
+    const jetGeo = new THREE.ConeGeometry(0.25 * scale, 0.5 * scale, 8);
+    const jetMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true });
+    const jetMesh = new THREE.Mesh(jetGeo, jetMat);
+    jetMesh.rotation.x = Math.PI;
+    jetMesh.position.set(0, -0.45 * scale, 0);
+    monsterGroup.add(jetMesh);
+
+    // Start flying in from deep space on far left/right!
+    const startX = targetX >= 0 ? 14.0 : -14.0;
+    monsterGroup.position.set(startX, y, relativeZ);
+
+    this.obstacleGroup.add(monsterGroup);
+
+    const obstacleObj = {
+      x: startX, targetX, y, relativeZ, width, height, depth,
+      type: 'alien_monster', active: true, mesh: monsterGroup,
+      eyeMesh,
+      hoverPhase: Math.random() * Math.PI * 2,
+      entryProgress: 0.0
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -259,6 +322,21 @@ export class TunnelSegment {
           obstacle.mesh.rotation.x += delta * obstacle.rotSpeedX;
           obstacle.mesh.rotation.y += delta * obstacle.rotSpeedY;
           obstacle.mesh.rotation.z += delta * obstacle.rotSpeedZ;
+        } else if (obstacle.type === 'alien_monster' && obstacle.mesh) {
+          // Smooth fly-in entry animation from deep space
+          if (obstacle.entryProgress < 1.0) {
+            obstacle.entryProgress = Math.min(1.0, obstacle.entryProgress + delta * 2.5);
+            const easeT = 1 - Math.pow(1 - obstacle.entryProgress, 3);
+            obstacle.x = THREE.MathUtils.lerp(obstacle.x, obstacle.targetX, easeT);
+            obstacle.mesh.position.x = obstacle.x;
+          }
+
+          // Continuous floating hover & eye pulse
+          obstacle.hoverPhase += delta * 3.0;
+          obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.25;
+          if (obstacle.eyeMesh && obstacle.eyeMesh.material) {
+            obstacle.eyeMesh.material.emissiveIntensity = 1.5 + Math.sin(obstacle.hoverPhase * 2.0) * 0.8;
+          }
         }
       }
     }
