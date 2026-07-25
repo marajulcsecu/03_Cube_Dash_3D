@@ -78,6 +78,13 @@ export class DebugOverlay {
     this.container.appendChild(this.overlayEl);
     this.statsEl = this.overlayEl.querySelector('#debug-stats-content');
 
+    // Dynamically populate pattern gallery options from PatternLibrary
+    const patternSelect = this.overlayEl.querySelector('#pattern-gallery-select');
+    if (patternSelect && this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
+      const patterns = this.game.renderer.sceneFactory.tunnelManager.patternLibrary.getAllPatterns();
+      patternSelect.innerHTML = patterns.map(p => `<option value="${p.id}">${p.name} (T${p.difficulty})</option>`).join('');
+    }
+
     this.overlayEl.querySelector('#debug-close-btn').addEventListener('click', () => this.hide());
     this.overlayEl.querySelector('#preset-low-btn').addEventListener('click', () => this.game.setQualityPreset('low'));
     this.overlayEl.querySelector('#preset-med-btn').addEventListener('click', () => this.game.setQualityPreset('medium'));
@@ -90,8 +97,8 @@ export class DebugOverlay {
         }
       });
     });
-    
-    this.overlayEl.querySelector('#pattern-gallery-select').addEventListener('change', (e) => {
+
+    patternSelect.addEventListener('change', (e) => {
       const selectedId = e.target.value;
       if (this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
         this.game.renderer.sceneFactory.tunnelManager.spawnSpecificPattern(selectedId);
@@ -105,7 +112,14 @@ export class DebugOverlay {
 
   show() {
     this.visible = true;
-    if (this.overlayEl) this.overlayEl.style.display = 'block';
+    if (this.overlayEl) {
+      this.overlayEl.style.display = 'block';
+      const patternSelect = this.overlayEl.querySelector('#pattern-gallery-select');
+      if (patternSelect && this.game.renderer && this.game.renderer.sceneFactory && this.game.renderer.sceneFactory.tunnelManager) {
+        const patterns = this.game.renderer.sceneFactory.tunnelManager.patternLibrary.getAllPatterns();
+        patternSelect.innerHTML = patterns.map(p => `<option value="${p.id}">${p.name} (T${p.difficulty})</option>`).join('');
+      }
+    }
   }
 
   hide() {
