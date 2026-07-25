@@ -93,7 +93,34 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.ASTEROID, lane: 2, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 3, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'single_asteroid_left',
+    name: 'Left Tumbling Asteroid',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [1, 2, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 0, relativeZ: 0, scale: 1.0 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'single_asteroid_right',
+    name: 'Right Tumbling Asteroid',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 2, 3],
+    hazards: [
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 0, scale: 1.0 },
+      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {

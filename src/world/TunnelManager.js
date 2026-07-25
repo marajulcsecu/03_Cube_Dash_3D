@@ -71,7 +71,11 @@ export class TunnelManager {
     const segment = this.segmentPool.acquire();
     this.totalSegmentsSpawned++;
 
-    const isRest = (this.totalSegmentsSpawned % 7 === 0);
+    const isTier1 = (this.difficultyDirector.currentTierIndex === 0);
+    // In Tier 1 CALM, safe rest runways occur every 4 segments for generous spacing!
+    const restInterval = isTier1 ? 4 : 6;
+
+    const isRest = (this.totalSegmentsSpawned % restInterval === 0);
     segment.reset(this.totalSegmentsSpawned, isRest);
     segment.meshGroup.position.z = targetZ;
 
@@ -82,7 +86,7 @@ export class TunnelManager {
         logger.info(`Difficulty Tier advanced to: ${this.difficultyDirector.currentTier.name}`, this.difficultyDirector.stats);
       }
       this.lastPattern = this.patternLibrary.getPattern('safe_runway');
-    } else if (this.totalSegmentsSpawned > 3) {
+    } else if (this.totalSegmentsSpawned > 6) { // 60m initial onboarding runway
       this._populateValidatedPattern(segment);
     } else {
       this.lastPattern = this.patternLibrary.getPattern('safe_runway');
