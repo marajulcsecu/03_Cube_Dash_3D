@@ -62,12 +62,20 @@ export class CollisionSystem {
           );
 
           if (this.playerBox.intersectsBox(this.obstacleBox)) {
-            if (obstacle.isCollectible || obstacle.type === 'shard' || obstacle.type === 'coin' || obstacle.type === 'magnet_powerup') {
+            if (obstacle.isCollectible || obstacle.type === 'shard' || obstacle.type === 'coin' || obstacle.type === 'magnet_powerup' || obstacle.type === 'shield_powerup') {
               obstacle.active = false;
               if (obstacle.mesh) {
                 obstacle.mesh.visible = false;
               }
               return { hit: true, type: obstacle.type || 'coin', obstacle };
+            } else if (player.shieldActive) {
+              // Energy Shield absorbs impact and shatters obstacle!
+              obstacle.active = false;
+              if (obstacle.mesh) {
+                obstacle.mesh.visible = false;
+              }
+              player.shieldActive = false; // Consume shield
+              return { hit: true, type: 'shield_break', obstacle };
             } else {
               return { hit: true, type: obstacle.type || 'wall', obstacle };
             }

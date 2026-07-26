@@ -20,6 +20,7 @@ export const OBSTACLE_TYPES = {
   COIN_TRAIL: 'coin_trail',
   COIN: 'coin',
   MAGNET_POWERUP: 'magnet_powerup',
+  SHIELD_POWERUP: 'shield_powerup',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -109,6 +110,18 @@ export const PATTERNS = [
       { type: OBSTACLE_TYPES.MAGNET_POWERUP, lane: 2, relativeZ: 0 },
       { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: -2, count: 2 },
       { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: -2, count: 2 }
+    ]
+  },
+  {
+    id: 'shield_powerup_center',
+    name: 'Energy Shield Power-Up Item',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 2, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.SHIELD_POWERUP, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -479,7 +492,7 @@ export class PatternLibrary {
 
   getRandomPattern(rng, maxDifficulty = 1) {
     // Exclude special powerup patterns from random hazard pool
-    const hazardPool = PATTERNS.filter(p => !p.id.includes('magnet_powerup'));
+    const hazardPool = PATTERNS.filter(p => !p.id.includes('powerup'));
     
     // Determine target difficulty level using a smooth weighted distribution curve
     const roll = rng.next();

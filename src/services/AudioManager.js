@@ -432,6 +432,52 @@ export class AudioManager {
     } catch (e) {}
   }
 
+  playShieldActivate() {
+    if (!this._canPlay()) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
+
+      gain.gain.setValueAtTime(this.volume * 0.45, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } catch (e) {}
+  }
+
+  playShieldShatter() {
+    if (!this._canPlay()) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(900, now);
+      osc.frequency.exponentialRampToValueAtTime(150, now + 0.25);
+
+      gain.gain.setValueAtTime(this.volume * 0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch (e) {}
+  }
+
   _canPlay() {
     return this.initialized && this.ctx && !this.muted && this.ctx.state === 'running';
   }

@@ -301,6 +301,15 @@ export class Game {
               this.magnetTimer = 10.0;
               audioManager.playMagnetActivate();
               logger.info('Activated Cyber Magnet Power-Up!');
+            } else if (hitResult.type === 'shield_powerup') {
+              player.shieldActive = true;
+              audioManager.playShieldActivate();
+              logger.info('Activated Energy Shield Power-Up!');
+            } else if (hitResult.type === 'shield_break') {
+              audioManager.playShieldShatter();
+              this.renderer.sceneFactory.triggerCameraShake(0.2);
+              this.scoreSystem.addScore(100);
+              logger.info(`Energy Shield shattered obstacle: ${hitResult.obstacle?.type || 'hazard'}`);
             } else if (currentState === STATES.RUNNING) {
               if (this._isHandlingCollision) return;
               this._isHandlingCollision = true;
@@ -339,6 +348,9 @@ export class Game {
     const magnetBoxEl = document.getElementById('hud-magnet-box');
     const magnetTimerEl = document.getElementById('hud-magnet-timer');
 
+    const shieldBoxEl = document.getElementById('hud-shield-box');
+    const player = this.renderer?.sceneFactory?.playerController;
+
     if (scoreEl) scoreEl.textContent = this.scoreSystem.score.toLocaleString();
     if (multEl) multEl.textContent = `${this.scoreSystem.multiplier}x`;
     if (shardsEl) shardsEl.textContent = this.scoreSystem.shardsCount.toString();
@@ -350,6 +362,14 @@ export class Game {
         magnetTimerEl.textContent = `${this.magnetTimer.toFixed(1)}s`;
       } else {
         magnetBoxEl.style.display = 'none';
+      }
+    }
+
+    if (shieldBoxEl) {
+      if (player && player.shieldActive) {
+        shieldBoxEl.style.display = 'flex';
+      } else {
+        shieldBoxEl.style.display = 'none';
       }
     }
   }

@@ -109,6 +109,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.MAGNET_POWERUP:
         this._addCyberMagnet(hazardConfig.lane || 2, relativeZ);
         break;
+      case OBSTACLE_TYPES.SHIELD_POWERUP:
+        this._addCyberShield(hazardConfig.lane || 2, relativeZ);
+        break;
     }
   }
 
@@ -644,6 +647,42 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addCyberShield(laneIndex, relativeZ = 0) {
+    const x = this.getLaneX(laneIndex);
+    const y = 0.5;
+
+    const shieldGroup = new THREE.Group();
+    shieldGroup.name = 'CyberShield';
+
+    // 1. Inner Glowing Icosahedron Energy Core Nucleus
+    const coreGeo = new THREE.IcosahedronGeometry(0.35, 1);
+    const coreMat = this.materialFactory.get('cyberShieldBlue');
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    shieldGroup.add(coreMesh);
+
+    // 2. Outer Spinning Wireframe Geodesic Forcefield Sheath
+    const sheathGeo = new THREE.IcosahedronGeometry(0.55, 1);
+    const sheathMat = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.75
+    });
+    const sheathMesh = new THREE.Mesh(sheathGeo, sheathMat);
+    shieldGroup.add(sheathMesh);
+
+    shieldGroup.position.set(x, y, relativeZ);
+    this.obstacleGroup.add(shieldGroup);
+
+    const obstacleObj = {
+      x, y, relativeZ, width: 1.4, height: 1.4, depth: 1.4,
+      type: 'shield_powerup', active: true, isCollectible: true, mesh: shieldGroup,
+      sheathMesh,
+      hoverPhase: Math.random() * Math.PI * 2
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -752,6 +791,15 @@ export class TunnelSegment {
         } else if (obstacle.type === 'magnet_powerup' && obstacle.mesh) {
           // Spin and hover magnet item smoothly
           obstacle.mesh.rotation.y += delta * 3.0;
+          obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.5;
+          obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.15;
+        } else if (obstacle.type === 'shield_powerup' && obstacle.mesh) {
+          // Spin crystal core and wireframe sheath in opposite directions
+          obstacle.mesh.rotation.y += delta * 3.0;
+          if (obstacle.sheathMesh) {
+            obstacle.sheathMesh.rotation.x -= delta * 2.0;
+            obstacle.sheathMesh.rotation.z += delta * 2.5;
+          }
           obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.5;
           obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.15;
         }

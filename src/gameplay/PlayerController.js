@@ -152,10 +152,32 @@ export class PlayerController {
     // Build Alien Rider seated on bike
     this._buildAlienRider();
 
+    // Build 3D Forcefield Shield Bubble Mesh
+    this._buildShieldBubble();
+
     this.meshGroup.add(this.visualMesh);
     this.meshGroup.position.set(0, this.y, 2.0); // Fixed Z position
 
     this.scene.add(this.meshGroup);
+  }
+
+  _buildShieldBubble() {
+    if (this.shieldMesh) {
+      if (this.shieldMesh.parent) this.shieldMesh.parent.remove(this.shieldMesh);
+      this.shieldMesh = null;
+    }
+
+    const shieldGeo = new THREE.SphereGeometry(1.15, 16, 16);
+    const shieldMat = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.65
+    });
+    this.shieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
+    this.shieldMesh.name = 'ForcefieldShield';
+    this.shieldMesh.visible = false;
+    this.visualMesh.add(this.shieldMesh);
   }
 
   _buildSpaceBike() {
@@ -536,6 +558,15 @@ export class PlayerController {
       this.bikeGroup.position.y = Math.sin(t * 35) * 0.008;
     }
 
+    // Update shield forcefield bubble mesh
+    if (this.shieldMesh) {
+      this.shieldMesh.visible = !!this.shieldActive;
+      if (this.shieldActive) {
+        this.shieldMesh.rotation.y += delta * 3.0;
+        this.shieldMesh.rotation.z += delta * 1.5;
+      }
+    }
+
     // Emit smoke particles from dual rear nozzles when running
     if (this.isGrounded && !this._flyOffActive && this.smokeSystem && this.exhaustNozzles) {
       this._smokeTimer = (this._smokeTimer || 0) + delta;
@@ -701,6 +732,7 @@ export class PlayerController {
     }
     this._flyOffActive = false;
     this._flyOffTimer  = 0;
+    this.shieldActive  = false;
     this.alienGroup    = null;
 
     this.currentLane = 2;

@@ -135,6 +135,16 @@ export class MaterialFactory {
       metalness: 0.8,
       flatShading: true
     }));
+
+    // Cyber Energy Shield Material (cyan blue glowing forcefield core)
+    this.materials.set('cyberShieldBlue', new THREE.MeshStandardMaterial({
+      color: 0x00f3ff,
+      emissive: 0x00aaff,
+      emissiveIntensity: 1.5,
+      roughness: 0.1,
+      metalness: 0.8,
+      flatShading: true
+    }));
   }
 
   get(name) {
