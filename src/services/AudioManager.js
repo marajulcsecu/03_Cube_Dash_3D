@@ -20,6 +20,9 @@ export class AudioManager {
     // MegaGameBox global window.setAudioMuted contract
     window.setAudioMuted = (isMuted) => {
       this.muted = !!isMuted;
+      if (this.bgmAudio) {
+        this.bgmAudio.muted = this.muted;
+      }
     };
   }
 
@@ -165,115 +168,61 @@ export class AudioManager {
     this.engineRunning = false;
   }
 
-  // ── 🎵 Qawwali Style Procedural Background Music Generator ──────────────────────
-  startQawwaliBGM() {
-    if (!this._canPlay() || this.qawwaliActive) return;
-
+  // ── 🎵 Custom Cyber Dash BGM Player (`cyber_dash_bgm.mp3`) ───────────────────────
+  _initCustomBGM() {
+    if (this.bgmAudio) return;
     try {
-      const now = this.ctx.currentTime;
-      this.qawwaliActive = true;
-
-      // 1. Harmonium Sur / Drone (Sa - Pa: C3 = 130.81 Hz, G3 = 196.00 Hz)
-      this.droneSa = this.ctx.createOscillator();
-      this.dronePa = this.ctx.createOscillator();
-      this.droneSa.type = 'sawtooth';
-      this.dronePa.type = 'triangle';
-
-      this.droneSa.frequency.setValueAtTime(130.81, now);
-      this.dronePa.frequency.setValueAtTime(196.00, now);
-
-      this.droneFilter = this.ctx.createBiquadFilter();
-      this.droneFilter.type = 'lowpass';
-      this.droneFilter.frequency.setValueAtTime(550, now);
-
-      this.droneGain = this.ctx.createGain();
-      this.droneGain.gain.setValueAtTime(0.001, now);
-      this.droneGain.gain.linearRampToValueAtTime(this.volume * 0.12, now + 1.0);
-
-      this.droneSa.connect(this.droneFilter);
-      this.dronePa.connect(this.droneFilter);
-      this.droneFilter.connect(this.droneGain);
-      this.droneGain.connect(this.ctx.destination);
-
-      this.droneSa.start(now);
-      this.dronePa.start(now);
-
-      // 2. Qawwali Harmonium & Tabla/Clap Sequencer Loop (Raag Yaman Scale)
-      // Scale Frequencies (Hz): C4(261.63), D4(293.66), E4(329.63), F#4(369.99), G4(392.00), A4(440.00), B4(493.88), C5(523.25)
-      const scale = [261.63, 293.66, 329.63, 369.99, 392.00, 440.00, 493.88, 523.25];
-      const melodySequence = [0, 2, 4, 3, 4, 6, 5, 4, 2, 3, 4, 2, 1, 0, 4, 7];
-      let step = 0;
-
-      this.qawwaliTimer = setInterval(() => {
-        if (!this.qawwaliActive || !this._canPlay()) return;
-
-        try {
-          const t = this.ctx.currentTime;
-
-          // A) Harmonium Lead Reed Note
-          const noteFreq = scale[melodySequence[step % melodySequence.length]];
-          const harmOsc = this.ctx.createOscillator();
-          const harmGain = this.ctx.createGain();
-
-          harmOsc.type = 'sawtooth';
-          harmOsc.frequency.setValueAtTime(noteFreq, t);
-
-          harmGain.gain.setValueAtTime(this.volume * 0.08, t);
-          harmGain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
-
-          harmOsc.connect(harmGain);
-          harmGain.connect(this.ctx.destination);
-
-          harmOsc.start(t);
-          harmOsc.stop(t + 0.28);
-
-          // B) Qawwali Handclap / Tabla Rhythm Pulse (on beats 0, 2, 4, 6)
-          if (step % 2 === 0) {
-            const clapOsc = this.ctx.createOscillator();
-            const clapGain = this.ctx.createGain();
-
-            clapOsc.type = 'triangle';
-            clapOsc.frequency.setValueAtTime(step % 4 === 0 ? 110 : 220, t);
-
-            clapGain.gain.setValueAtTime(this.volume * 0.1, t);
-            clapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-
-            clapOsc.connect(clapGain);
-            clapGain.connect(this.ctx.destination);
-
-            clapOsc.start(t);
-            clapOsc.stop(t + 0.08);
-          }
-
-          step++;
-        } catch (e) {}
-      }, 300); // 100 BPM Qawwali Tempo
+      this.bgmAudio = new Audio('./assets/cyber_dash_bgm.mp3');
+      this.bgmAudio.loop = true;
+      this.bgmAudio.volume = this.volume * 0.45;
+      this.bgmAudio.muted = this.muted;
     } catch (e) {
-      this.qawwaliActive = false;
+      console.warn('Failed to load custom BGM track:', e);
     }
   }
 
-  stopQawwaliBGM() {
-    if (this.qawwaliTimer) {
-      clearInterval(this.qawwaliTimer);
-      this.qawwaliTimer = null;
-    }
-
-    if (this.droneSa) {
-      try { this.droneSa.stop(); this.droneSa.disconnect(); } catch (e) {}
-      this.droneSa = null;
-    }
-    if (this.dronePa) {
-      try { this.dronePa.stop(); this.dronePa.disconnect(); } catch (e) {}
-      this.dronePa = null;
-    }
-    if (this.droneGain) {
-      try { this.droneGain.disconnect(); } catch (e) {}
-      this.droneGain = null;
-    }
-
-    this.qawwaliActive = false;
+  playBGM() {
+    this._initCustomBGM();
+    if (!this.bgmAudio || this.muted) return;
+    try {
+      if (this.bgmAudio.paused) {
+        this.bgmAudio.currentTime = 0;
+        this.bgmAudio.play().catch(e => {
+          console.warn('BGM playback waiting for user gesture:', e);
+        });
+      }
+    } catch (e) {}
   }
+
+  pauseBGM() {
+    if (this.bgmAudio) {
+      try {
+        this.bgmAudio.pause();
+      } catch (e) {}
+    }
+  }
+
+  resumeBGM() {
+    this._initCustomBGM();
+    if (this.bgmAudio && !this.muted) {
+      try {
+        this.bgmAudio.play().catch(e => {});
+      } catch (e) {}
+    }
+  }
+
+  stopBGM() {
+    if (this.bgmAudio) {
+      try {
+        this.bgmAudio.pause();
+        this.bgmAudio.currentTime = 0;
+      } catch (e) {}
+    }
+  }
+
+  // Alias methods for backward compatibility
+  startQawwaliBGM() { this.playBGM(); }
+  stopQawwaliBGM() { this.stopBGM(); }
 
   stopEngine() {
     if (!this.engineRunning || !this.ctx) return;
