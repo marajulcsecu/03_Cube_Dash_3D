@@ -73,8 +73,8 @@ export class TunnelManager {
     this.totalSegmentsSpawned++;
 
     const isTier1 = (this.difficultyDirector.currentTierIndex === 0);
-    // In Tier 1 CALM, safe rest runways occur every 4 segments for generous spacing!
-    const restInterval = isTier1 ? 4 : 6;
+    // In Tier 1 CALM, alternate every 2nd segment as a clean runway for generous spacing!
+    const restInterval = isTier1 ? 2 : 4;
 
     const isRest = (this.totalSegmentsSpawned % restInterval === 0);
     segment.reset(this.totalSegmentsSpawned, isRest);
@@ -87,6 +87,22 @@ export class TunnelManager {
         logger.info(`Difficulty Tier advanced to: ${this.difficultyDirector.currentTier.name}`, this.difficultyDirector.stats);
       }
       this.lastPattern = this.patternLibrary.getPattern('safe_runway');
+
+      // Controlled rare chance for Power-Ups or Coin Trails on safe runway segments
+      const rewardRoll = this.rng.next();
+      if (rewardRoll < 0.08) {
+        // 8% Rare Cyber Magnet Power-Up
+        const pattern = this.patternLibrary.getPattern('magnet_powerup_center');
+        if (pattern && pattern.hazards) {
+          pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
+        }
+      } else if (rewardRoll < 0.22) {
+        // 14% Coin Trail Bonus
+        const pattern = this.patternLibrary.getPattern('coin_trail_center');
+        if (pattern && pattern.hazards) {
+          pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
+        }
+      }
     } else if (this.totalSegmentsSpawned > 6) { // 60m initial onboarding runway
       this._populateValidatedPattern(segment);
     } else {

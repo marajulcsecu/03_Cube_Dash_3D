@@ -46,9 +46,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [0, 1, 3, 4],
     hazards: [
-      { type: OBSTACLE_TYPES.LANE_WALL, lane: 2, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.LANE_WALL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -60,8 +58,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [1, 2, 3, 4],
     hazards: [
-      { type: OBSTACLE_TYPES.LANE_WALL, lane: 0, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.LANE_WALL, lane: 0, relativeZ: 0 }
     ]
   },
   {
@@ -73,8 +70,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [0, 1, 2, 3],
     hazards: [
-      { type: OBSTACLE_TYPES.LANE_WALL, lane: 4, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.LANE_WALL, lane: 4, relativeZ: 0 }
     ]
   },
   {
@@ -86,8 +82,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [0, 1, 2, 3, 4],
     hazards: [
-      { type: OBSTACLE_TYPES.LOW_BARRIER, lane: 2, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: -2 }
+      { type: OBSTACLE_TYPES.LOW_BARRIER, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -99,7 +94,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [0, 1, 2, 3, 4],
     hazards: [
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0, count: 4 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0, count: 3 }
     ]
   },
   {
@@ -112,8 +107,8 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.MAGNET_POWERUP, lane: 2, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: -2, count: 3 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: -2, count: 3 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: -2, count: 2 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: -2, count: 2 }
     ]
   },
   {
@@ -125,9 +120,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [0, 1, 3, 4],
     hazards: [
-      { type: OBSTACLE_TYPES.ASTEROID, lane: 2, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 2, relativeZ: 0, scale: 1.0 }
     ]
   },
   {
@@ -139,8 +132,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [1, 2, 3, 4],
     hazards: [
-      { type: OBSTACLE_TYPES.ASTEROID, lane: 0, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 0, relativeZ: 0, scale: 1.0 }
     ]
   },
   {
@@ -152,8 +144,7 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [0, 1, 2, 3],
     hazards: [
-      { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 0, scale: 1.0 }
     ]
   },
   {
@@ -487,10 +478,11 @@ export class PatternLibrary {
   }
 
   getRandomPattern(rng, targetDifficulty = 1) {
-    // Strictly filter patterns by current tier's difficulty rating
-    const matching = PATTERNS.filter(p => p.difficulty === targetDifficulty || p.difficulty === targetDifficulty - 1);
+    // Exclude special powerup patterns from random hazard pool
+    const hazardPool = PATTERNS.filter(p => !p.id.includes('magnet_powerup'));
+    const matching = hazardPool.filter(p => p.difficulty === targetDifficulty || p.difficulty === targetDifficulty - 1);
     if (matching.length === 0) {
-      const fallback = PATTERNS.filter(p => p.difficulty <= targetDifficulty);
+      const fallback = hazardPool.filter(p => p.difficulty <= targetDifficulty);
       const index = rng.nextInt(0, fallback.length - 1);
       return fallback[index] || PATTERNS[0];
     }
