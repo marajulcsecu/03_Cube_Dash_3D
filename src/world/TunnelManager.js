@@ -96,8 +96,14 @@ export class TunnelManager {
         if (pattern && pattern.hazards) {
           pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
         }
-      } else if (rewardRoll < 0.22) {
-        // 14% Coin Trail Bonus
+      } else if (rewardRoll < 0.16) {
+        // 8% Rare Energy Shield Power-Up
+        const pattern = this.patternLibrary.getPattern('shield_powerup_center');
+        if (pattern && pattern.hazards) {
+          pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
+        }
+      } else if (rewardRoll < 0.35) {
+        // 19% Coin Trail Bonus
         const pattern = this.patternLibrary.getPattern('coin_trail_center');
         if (pattern && pattern.hazards) {
           pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
