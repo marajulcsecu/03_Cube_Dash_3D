@@ -46,8 +46,8 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 2, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 3, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: 0 }
     ]
   },
   {
@@ -60,7 +60,7 @@ export const PATTERNS = [
     safePath: [1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 0, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -73,7 +73,7 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3],
     hazards: [
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 4, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -86,7 +86,7 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.LOW_BARRIER, lane: 2, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: -2 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: -2 }
     ]
   },
   {
@@ -111,8 +111,8 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.ASTEROID, lane: 2, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 3, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: 0 }
     ]
   },
   {
@@ -125,7 +125,7 @@ export const PATTERNS = [
     safePath: [1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.ASTEROID, lane: 0, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -138,7 +138,7 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3],
     hazards: [
       { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -150,10 +150,10 @@ export const PATTERNS = [
     incompatibleNeighbors: [],
     safePath: [0, 1, 2, 3, 4],
     hazards: [
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 0, relativeZ: -3 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: -1 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 1 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 3, relativeZ: 3 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 0, relativeZ: -3 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: -1 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 1 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: 3 }
     ]
   },
 
@@ -169,7 +169,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 0, relativeZ: 0 },
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 4, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -183,7 +183,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 0, relativeZ: 0 },
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 1, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 3, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: 0 }
     ]
   },
   {
@@ -197,7 +197,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 3, relativeZ: 0 },
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 4, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
   {
@@ -212,7 +212,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.LOW_BARRIER, lane: 1, relativeZ: 0 },
       { type: OBSTACLE_TYPES.LOW_BARRIER, lane: 3, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -226,7 +226,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.ASTEROID, lane: 0, relativeZ: 0, scale: 1.1 },
       { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 0, scale: 1.1 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -239,7 +239,7 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.ALIEN_MONSTER, lane: 2, relativeZ: 0, scale: 1.0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
   {
@@ -252,7 +252,7 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.LASER_GRID, lane: 2, heightY: 1.1, isSweeping: false },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
 
@@ -280,7 +280,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.LASER_GRID, lane: 0, heightY: 1.1, isSweeping: true },
       { type: OBSTACLE_TYPES.LASER_GRID, lane: 4, heightY: 1.1, isSweeping: true },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -293,7 +293,7 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.PLASMA_ROTOR, lane: 2, spinSpeed: 6.5 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
   {
@@ -306,7 +306,7 @@ export const PATTERNS = [
     safePath: [0, 1, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.WORMHOLE_VOID, lane: 2, scale: 1.0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 1, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: 0 }
     ]
   },
   {
@@ -320,7 +320,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.ALIEN_MONSTER, lane: 0, relativeZ: 0, scale: 1.1 },
       { type: OBSTACLE_TYPES.ALIEN_MONSTER, lane: 4, relativeZ: 0, scale: 1.1 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -334,7 +334,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.ASTEROID, lane: 1, relativeZ: -2, scale: 1.0 },
       { type: OBSTACLE_TYPES.ASTEROID, lane: 3, relativeZ: 1, scale: 1.25 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -347,7 +347,7 @@ export const PATTERNS = [
     safePath: [2],
     hazards: [
       { type: OBSTACLE_TYPES.FLOOR_GAP, gapLanes: [0, 1, 3, 4] },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -379,7 +379,7 @@ export const PATTERNS = [
       { type: OBSTACLE_TYPES.ASTEROID, lane: 1, relativeZ: 1, scale: 1.0 },
       { type: OBSTACLE_TYPES.ASTEROID, lane: 3, relativeZ: -1, scale: 1.0 },
       { type: OBSTACLE_TYPES.ASTEROID, lane: 4, relativeZ: 1, scale: 1.1 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -412,7 +412,7 @@ export const PATTERNS = [
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 1, relativeZ: 0 },
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 3, relativeZ: 0 },
       { type: OBSTACLE_TYPES.LANE_WALL, lane: 4, relativeZ: 0 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
   {
@@ -426,7 +426,7 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.PULSE_WALL, lane: 0, relativeZ: 0, pulseFrequency: 3.5 },
       { type: OBSTACLE_TYPES.PULSE_WALL, lane: 4, relativeZ: 0, pulseFrequency: 3.5 },
-      { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: 0 }
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0 }
     ]
   },
 

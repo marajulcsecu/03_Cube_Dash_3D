@@ -534,31 +534,60 @@ export class TunnelSegment {
     const coinGroup = new THREE.Group();
     coinGroup.name = 'CyberCoin';
 
-    // 1. Gold Metallic Coin Disc (Cylinder)
-    const coinGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.08, 12);
-    coinGeo.rotateX(Math.PI / 2);
-    const goldMat = this.materialFactory.get('cyberCoinGold');
-    const coinMesh = new THREE.Mesh(coinGeo, goldMat);
-    coinGroup.add(coinMesh);
-
-    // 2. Inner Neon Cyan Emissive Core Node
-    const coreGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.09, 8);
-    coreGeo.rotateX(Math.PI / 2);
-    const coreMat = new THREE.MeshStandardMaterial({
-      color: 0x00ffff,
-      emissive: 0x00ffff,
-      emissiveIntensity: 2.0
+    // Premium Metallic Gold Material
+    const outerGoldMat = new THREE.MeshStandardMaterial({
+      color: 0xffcc00,
+      emissive: 0x996600,
+      emissiveIntensity: 0.8,
+      metalness: 0.95,
+      roughness: 0.15
     });
-    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    coinGroup.add(coreMesh);
+
+    const innerGoldMat = new THREE.MeshStandardMaterial({
+      color: 0xffe066,
+      emissive: 0xaa7700,
+      emissiveIntensity: 1.0,
+      metalness: 0.9,
+      roughness: 0.2
+    });
+
+    const starEmblemMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffaa00,
+      emissiveIntensity: 2.2,
+      roughness: 0.1
+    });
+
+    // 1. Outer Beveled Gold Rim (Smooth 24-segment Cylinder)
+    const rimGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.08, 24);
+    const rimMesh = new THREE.Mesh(rimGeo, outerGoldMat);
+    coinGroup.add(rimMesh);
+
+    // 2. Inner Recessed Coin Inset Plates
+    const plateGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.09, 24);
+    const plateMesh = new THREE.Mesh(plateGeo, innerGoldMat);
+    coinGroup.add(plateMesh);
+
+    // 3. Stamped 3D Star / Diamond Cyber Emblem
+    const emblemGeo = new THREE.OctahedronGeometry(0.18, 0);
+    emblemGeo.scale(1.0, 0.3, 1.0);
+    const emblemMesh = new THREE.Mesh(emblemGeo, starEmblemMat);
+    coinGroup.add(emblemMesh);
+
+    // 4. Outer Sparkle Energy Sheath Ring
+    const ringGeo = new THREE.RingGeometry(0.45, 0.50, 16);
+    ringGeo.rotateX(Math.PI / 2);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffd700, wireframe: true, transparent: true, opacity: 0.6 });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    coinGroup.add(ringMesh);
 
     coinGroup.position.set(x, y, z);
     this.obstacleGroup.add(coinGroup);
 
     const obstacleObj = {
-      x, y, relativeZ: z, width: 0.7, height: 0.7, depth: 0.7,
+      x, y, relativeZ: z, width: 0.8, height: 0.8, depth: 0.8,
       type: 'coin', active: true, isCollectible: true, mesh: coinGroup,
-      coinMesh
+      hoverPhase: Math.random() * Math.PI * 2
     };
     this.obstacles.push(obstacleObj);
   }
@@ -664,8 +693,10 @@ export class TunnelSegment {
             obstacle.particleGroup.rotation.z -= delta * 4.0;
           }
         } else if (obstacle.type === 'coin' && obstacle.mesh) {
-          // Spin golden coins continuously
-          obstacle.mesh.rotation.y += delta * 4.0;
+          // Spin golden coins continuously around Y axis & hover gently
+          obstacle.mesh.rotation.y += delta * 3.5;
+          obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.0;
+          obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.12;
         }
       }
     }
