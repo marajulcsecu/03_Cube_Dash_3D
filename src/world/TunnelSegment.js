@@ -112,6 +112,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.SHIELD_POWERUP:
         this._addCyberShield(hazardConfig.lane || 2, relativeZ);
         break;
+      case OBSTACLE_TYPES.MULTIPLIER_POWERUP:
+        this._addCyberMultiplier(hazardConfig.lane || 2, relativeZ);
+        break;
     }
   }
 
@@ -683,6 +686,38 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addCyberMultiplier(laneIndex, relativeZ = 0) {
+    const x = this.getLaneX(laneIndex);
+    const y = 0.5;
+
+    const multGroup = new THREE.Group();
+    multGroup.name = 'CyberMultiplier';
+
+    // 1. Neon Purple Diamond Crystal Nucleus (Octahedron)
+    const crystalGeo = new THREE.OctahedronGeometry(0.42, 0);
+    const purpMat = this.materialFactory.get('cyberMultiplierPurple');
+    const crystalMesh = new THREE.Mesh(crystalGeo, purpMat);
+    multGroup.add(crystalMesh);
+
+    // 2. Gold Metallic Equatorial Halo Ring
+    const haloGeo = new THREE.TorusGeometry(0.55, 0.05, 12, 24);
+    haloGeo.rotateX(Math.PI / 2);
+    const goldMat = this.materialFactory.get('cyberCoinGold');
+    const haloMesh = new THREE.Mesh(haloGeo, goldMat);
+    multGroup.add(haloMesh);
+
+    multGroup.position.set(x, y, relativeZ);
+    this.obstacleGroup.add(multGroup);
+
+    const obstacleObj = {
+      x, y, relativeZ, width: 1.4, height: 1.4, depth: 1.4,
+      type: 'multiplier_powerup', active: true, isCollectible: true, mesh: multGroup,
+      haloMesh,
+      hoverPhase: Math.random() * Math.PI * 2
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -799,6 +834,14 @@ export class TunnelSegment {
           if (obstacle.sheathMesh) {
             obstacle.sheathMesh.rotation.x -= delta * 2.0;
             obstacle.sheathMesh.rotation.z += delta * 2.5;
+          }
+          obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.5;
+          obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.15;
+        } else if (obstacle.type === 'multiplier_powerup' && obstacle.mesh) {
+          // Spin crystal core and halo ring in opposite axes
+          obstacle.mesh.rotation.y += delta * 3.5;
+          if (obstacle.haloMesh) {
+            obstacle.haloMesh.rotation.x += delta * 2.5;
           }
           obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.5;
           obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.15;

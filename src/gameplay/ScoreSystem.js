@@ -9,6 +9,7 @@ export class ScoreSystem {
     this.score = 0;
     this.highScore = this._loadHighScore();
     this.multiplier = 1;
+    this.boostMultiplier = 1;
     this.multiplierCap = 5;
     this.streakCount = 0;
     this.streakThreshold = 3; // Every 3 clean actions increases multiplier by +1
@@ -21,9 +22,22 @@ export class ScoreSystem {
     this.scoredObstacles = new Set();
   }
 
+  get effectiveMultiplier() {
+    return this.multiplier * (this.boostMultiplier || 1);
+  }
+
+  setMultiplierBoost(factor = 2) {
+    this.boostMultiplier = factor;
+  }
+
+  clearMultiplierBoost() {
+    this.boostMultiplier = 1;
+  }
+
   reset() {
     this.score = 0;
     this.multiplier = 1;
+    this.boostMultiplier = 1;
     this.streakCount = 0;
     this.shardsCount = 0;
     this.coinsCount = 0;
@@ -32,9 +46,10 @@ export class ScoreSystem {
   }
 
   updateDistance(distanceMeters) {
-    // 1 meter = 10 integer points * current multiplier
-    const distancePoints = Math.floor(distanceMeters) * 10 * this.multiplier;
-    this.score = distancePoints + (this.shardsCount * 50 * this.multiplier) + (this.coinsCount * 50 * this.multiplier) + (this.nearMissCount * 25 * this.multiplier);
+    // 1 meter = 10 integer points * current effective multiplier
+    const mult = this.effectiveMultiplier;
+    const distancePoints = Math.floor(distanceMeters) * 10 * mult;
+    this.score = distancePoints + (this.shardsCount * 50 * mult) + (this.coinsCount * 50 * mult) + (this.nearMissCount * 25 * mult);
 
     if (this.score > this.highScore) {
       this.highScore = this.score;
@@ -44,7 +59,7 @@ export class ScoreSystem {
 
   collectShard() {
     this.shardsCount++;
-    this.score += 50 * this.multiplier;
+    this.score += 50 * this.effectiveMultiplier;
     if (this.score > this.highScore) {
       this.highScore = this.score;
       this._saveHighScore(this.highScore);
@@ -54,7 +69,7 @@ export class ScoreSystem {
 
   collectCoin() {
     this.coinsCount++;
-    this.score += 50 * this.multiplier;
+    this.score += 50 * this.effectiveMultiplier;
     if (this.score > this.highScore) {
       this.highScore = this.score;
       this._saveHighScore(this.highScore);
@@ -63,7 +78,7 @@ export class ScoreSystem {
   }
 
   addBonusPoints(points = 100) {
-    this.score += points * this.multiplier;
+    this.score += points * this.effectiveMultiplier;
     if (this.score > this.highScore) {
       this.highScore = this.score;
       this._saveHighScore(this.highScore);

@@ -145,6 +145,16 @@ export class MaterialFactory {
       metalness: 0.8,
       flatShading: true
     }));
+
+    // Cyber Score Multiplier Orb Material (glowing neon purple crystal)
+    this.materials.set('cyberMultiplierPurple', new THREE.MeshStandardMaterial({
+      color: 0x9d4edd,
+      emissive: 0x7b2cbf,
+      emissiveIntensity: 1.6,
+      roughness: 0.1,
+      metalness: 0.8,
+      flatShading: true
+    }));
   }
 
   get(name) {

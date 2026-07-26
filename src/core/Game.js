@@ -30,6 +30,7 @@ export class Game {
     this.missionManager = new MissionManager();
     this.tutorialManager = new TutorialManager();
     this.magnetTimer = 0.0;
+    this.multiplierTimer = 0.0;
     this.debugOverlay = null;
     this.animationFrameId = null;
 
@@ -84,6 +85,7 @@ export class Game {
 
     this.shardsCollected = 0;
     this.magnetTimer = 0.0;
+    this.multiplierTimer = 0.0;
     this._isHandlingCollision = false;
     this.scoreSystem.reset();
 
@@ -282,6 +284,14 @@ export class Game {
             tunnelManager.updateMagnetAttraction(player.position, delta);
           }
 
+          // Update multiplier active timer & score system boost
+          if (this.multiplierTimer > 0) {
+            this.multiplierTimer = Math.max(0, this.multiplierTimer - delta);
+            if (this.multiplierTimer === 0) {
+              this.scoreSystem.clearMultiplierBoost();
+            }
+          }
+
           // Update HUD DOM Elements
           this._updateHUD();
 
@@ -305,6 +315,11 @@ export class Game {
               player.shieldActive = true;
               audioManager.playShieldActivate();
               logger.info('Activated Energy Shield Power-Up!');
+            } else if (hitResult.type === 'multiplier_powerup') {
+              this.multiplierTimer = 12.0;
+              this.scoreSystem.setMultiplierBoost(2);
+              audioManager.playMultiplierActivate();
+              logger.info('Activated 2x Score Multiplier Boost!');
             } else if (hitResult.type === 'shield_break') {
               audioManager.playShieldShatter();
               this.renderer.sceneFactory.triggerCameraShake(0.2);
@@ -349,10 +364,12 @@ export class Game {
     const magnetTimerEl = document.getElementById('hud-magnet-timer');
 
     const shieldBoxEl = document.getElementById('hud-shield-box');
+    const multBoxEl = document.getElementById('hud-multiplier-box');
+    const multTimerEl = document.getElementById('hud-multiplier-timer');
     const player = this.renderer?.sceneFactory?.playerController;
 
     if (scoreEl) scoreEl.textContent = this.scoreSystem.score.toLocaleString();
-    if (multEl) multEl.textContent = `${this.scoreSystem.multiplier}x`;
+    if (multEl) multEl.textContent = `${this.scoreSystem.effectiveMultiplier}x`;
     if (shardsEl) shardsEl.textContent = this.scoreSystem.shardsCount.toString();
     if (coinsEl) coinsEl.textContent = this.scoreSystem.coinsCount.toString();
 
@@ -370,6 +387,15 @@ export class Game {
         shieldBoxEl.style.display = 'flex';
       } else {
         shieldBoxEl.style.display = 'none';
+      }
+    }
+
+    if (multBoxEl && multTimerEl) {
+      if (this.multiplierTimer > 0) {
+        multBoxEl.style.display = 'flex';
+        multTimerEl.textContent = `${this.multiplierTimer.toFixed(1)}s`;
+      } else {
+        multBoxEl.style.display = 'none';
       }
     }
   }

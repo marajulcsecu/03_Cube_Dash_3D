@@ -21,6 +21,7 @@ export const OBSTACLE_TYPES = {
   COIN: 'coin',
   MAGNET_POWERUP: 'magnet_powerup',
   SHIELD_POWERUP: 'shield_powerup',
+  MULTIPLIER_POWERUP: 'multiplier_powerup',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -122,6 +123,18 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.SHIELD_POWERUP, lane: 2, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'multiplier_powerup_center',
+    name: 'Score Multiplier Boost Orb',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 2, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.MULTIPLIER_POWERUP, lane: 2, relativeZ: 0 }
     ]
   },
   {

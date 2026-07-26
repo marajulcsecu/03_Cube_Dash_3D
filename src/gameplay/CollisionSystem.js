@@ -62,7 +62,7 @@ export class CollisionSystem {
           );
 
           if (this.playerBox.intersectsBox(this.obstacleBox)) {
-            if (obstacle.isCollectible || obstacle.type === 'shard' || obstacle.type === 'coin' || obstacle.type === 'magnet_powerup' || obstacle.type === 'shield_powerup') {
+            if (obstacle.isCollectible || obstacle.type === 'shard' || obstacle.type === 'coin' || obstacle.type === 'magnet_powerup' || obstacle.type === 'shield_powerup' || obstacle.type === 'multiplier_powerup') {
               obstacle.active = false;
               if (obstacle.mesh) {
                 obstacle.mesh.visible = false;
