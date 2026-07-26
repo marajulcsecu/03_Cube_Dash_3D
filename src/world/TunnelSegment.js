@@ -529,7 +529,7 @@ export class TunnelSegment {
 
     for (let i = 0; i < count; i++) {
       const z = relativeZ - (i * spacing);
-      this._addSingleCoin(x, 1.0, z);
+      this._addSingleCoin(x, 0.5, z);
     }
   }
 
@@ -597,7 +597,7 @@ export class TunnelSegment {
 
   _addCyberMagnet(laneIndex, relativeZ = 0) {
     const x = this.getLaneX(laneIndex);
-    const y = 1.1;
+    const y = 0.5;
 
     const magnetGroup = new THREE.Group();
     magnetGroup.name = 'CyberMagnet';
@@ -636,7 +636,7 @@ export class TunnelSegment {
     this.obstacleGroup.add(magnetGroup);
 
     const obstacleObj = {
-      x, y, relativeZ, width: 0.9, height: 0.9, depth: 0.9,
+      x, y, relativeZ, width: 1.4, height: 1.4, depth: 1.4,
       type: 'magnet_powerup', active: true, isCollectible: true, mesh: magnetGroup,
       fieldMesh,
       hoverPhase: Math.random() * Math.PI * 2

@@ -83,6 +83,7 @@ export class Game {
     if (!this.renderer || !this.renderer.sceneFactory) return;
 
     this.shardsCollected = 0;
+    this.magnetTimer = 0.0;
     this._isHandlingCollision = false;
     this.scoreSystem.reset();
 
