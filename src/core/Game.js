@@ -308,7 +308,7 @@ export class Game {
             } else if (hitResult.type === 'shield_break') {
               audioManager.playShieldShatter();
               this.renderer.sceneFactory.triggerCameraShake(0.2);
-              this.scoreSystem.addScore(100);
+              this.scoreSystem.addBonusPoints(100);
               logger.info(`Energy Shield shattered obstacle: ${hitResult.obstacle?.type || 'hazard'}`);
             } else if (currentState === STATES.RUNNING) {
               if (this._isHandlingCollision) return;

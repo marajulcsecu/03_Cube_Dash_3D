@@ -62,6 +62,14 @@ export class ScoreSystem {
     this._incrementStreak();
   }
 
+  addBonusPoints(points = 100) {
+    this.score += points * this.multiplier;
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      this._saveHighScore(this.highScore);
+    }
+  }
+
   registerNearMiss(obstacleId) {
     if (this.scoredObstacles.has(obstacleId)) return false; // Prevent farming!
 
