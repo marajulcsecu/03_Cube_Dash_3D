@@ -150,55 +150,129 @@ export class AudioManager {
   }
 
   // ── Cyberpunk Vehicle Engine Sound Synthesizer ─────────────────────────────────
+  // ── Vehicle Engine Sound Synthesizer (Disabled per user request) ────────────────
   startEngine() {
-    if (!this._canPlay() || this.engineRunning) return;
+    // Silenced annoying vehicle sound per user request!
+    return;
+  }
+
+  updateEngineRPM(speedNormalized = 0) {
+    // Silenced annoying vehicle sound per user request!
+    return;
+  }
+
+  stopEngine() {
+    this.engineRunning = false;
+  }
+
+  // ── 🎵 Qawwali Style Procedural Background Music Generator ──────────────────────
+  startQawwaliBGM() {
+    if (!this._canPlay() || this.qawwaliActive) return;
 
     try {
       const now = this.ctx.currentTime;
-      this.engineRunning = true;
+      this.qawwaliActive = true;
 
-      // 1. Sub-bass growl oscillator (sawtooth for rich harmonics)
-      this.engineOsc = this.ctx.createOscillator();
-      this.engineOsc.type = 'sawtooth';
-      this.engineOsc.frequency.setValueAtTime(65, now);
+      // 1. Harmonium Sur / Drone (Sa - Pa: C3 = 130.81 Hz, G3 = 196.00 Hz)
+      this.droneSa = this.ctx.createOscillator();
+      this.dronePa = this.ctx.createOscillator();
+      this.droneSa.type = 'sawtooth';
+      this.dronePa.type = 'triangle';
 
-      // 2. High-resonance Sci-Fi lowpass filter (Tron / Cyberpunk turbine hum)
-      this.engineFilter = this.ctx.createBiquadFilter();
-      this.engineFilter.type = 'lowpass';
-      this.engineFilter.frequency.setValueAtTime(320, now);
-      this.engineFilter.Q.setValueAtTime(5.0, now); // High Q gives sci-fi whistle/hum
+      this.droneSa.frequency.setValueAtTime(130.81, now);
+      this.dronePa.frequency.setValueAtTime(196.00, now);
 
-      // 3. Sub-oscillator for deep bass rumble (sine at octave down)
-      this.subOsc = this.ctx.createOscillator();
-      this.subOsc.type = 'sine';
-      this.subOsc.frequency.setValueAtTime(32.5, now);
+      this.droneFilter = this.ctx.createBiquadFilter();
+      this.droneFilter.type = 'lowpass';
+      this.droneFilter.frequency.setValueAtTime(550, now);
 
-      // 4. LFO for engine pulse modulation
-      this.engineLFO = this.ctx.createOscillator();
-      this.engineLFO.type = 'sine';
-      this.engineLFO.frequency.setValueAtTime(14, now); // 14 Hz pulsing rumble
+      this.droneGain = this.ctx.createGain();
+      this.droneGain.gain.setValueAtTime(0.001, now);
+      this.droneGain.gain.linearRampToValueAtTime(this.volume * 0.12, now + 1.0);
 
-      this.lfoGain = this.ctx.createGain();
-      this.lfoGain.gain.setValueAtTime(15, now);
-      this.engineLFO.connect(this.lfoGain.gain);
+      this.droneSa.connect(this.droneFilter);
+      this.dronePa.connect(this.droneFilter);
+      this.droneFilter.connect(this.droneGain);
+      this.droneGain.connect(this.ctx.destination);
 
-      // 5. Main Engine Master Gain Node
-      this.engineGain = this.ctx.createGain();
-      this.engineGain.gain.setValueAtTime(0.001, now);
-      this.engineGain.gain.linearRampToValueAtTime(this.volume * 0.18, now + 0.3);
+      this.droneSa.start(now);
+      this.dronePa.start(now);
 
-      // Signal routing: Osc -> Filter -> Master Gain -> Audio Destination
-      this.engineOsc.connect(this.engineFilter);
-      this.subOsc.connect(this.engineFilter);
-      this.engineFilter.connect(this.engineGain);
-      this.engineGain.connect(this.ctx.destination);
+      // 2. Qawwali Harmonium & Tabla/Clap Sequencer Loop (Raag Yaman Scale)
+      // Scale Frequencies (Hz): C4(261.63), D4(293.66), E4(329.63), F#4(369.99), G4(392.00), A4(440.00), B4(493.88), C5(523.25)
+      const scale = [261.63, 293.66, 329.63, 369.99, 392.00, 440.00, 493.88, 523.25];
+      const melodySequence = [0, 2, 4, 3, 4, 6, 5, 4, 2, 3, 4, 2, 1, 0, 4, 7];
+      let step = 0;
 
-      this.engineOsc.start(now);
-      this.subOsc.start(now);
-      this.engineLFO.start(now);
+      this.qawwaliTimer = setInterval(() => {
+        if (!this.qawwaliActive || !this._canPlay()) return;
+
+        try {
+          const t = this.ctx.currentTime;
+
+          // A) Harmonium Lead Reed Note
+          const noteFreq = scale[melodySequence[step % melodySequence.length]];
+          const harmOsc = this.ctx.createOscillator();
+          const harmGain = this.ctx.createGain();
+
+          harmOsc.type = 'sawtooth';
+          harmOsc.frequency.setValueAtTime(noteFreq, t);
+
+          harmGain.gain.setValueAtTime(this.volume * 0.08, t);
+          harmGain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+          harmOsc.connect(harmGain);
+          harmGain.connect(this.ctx.destination);
+
+          harmOsc.start(t);
+          harmOsc.stop(t + 0.28);
+
+          // B) Qawwali Handclap / Tabla Rhythm Pulse (on beats 0, 2, 4, 6)
+          if (step % 2 === 0) {
+            const clapOsc = this.ctx.createOscillator();
+            const clapGain = this.ctx.createGain();
+
+            clapOsc.type = 'triangle';
+            clapOsc.frequency.setValueAtTime(step % 4 === 0 ? 110 : 220, t);
+
+            clapGain.gain.setValueAtTime(this.volume * 0.1, t);
+            clapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+
+            clapOsc.connect(clapGain);
+            clapGain.connect(this.ctx.destination);
+
+            clapOsc.start(t);
+            clapOsc.stop(t + 0.08);
+          }
+
+          step++;
+        } catch (e) {}
+      }, 300); // 100 BPM Qawwali Tempo
     } catch (e) {
-      this.engineRunning = false;
+      this.qawwaliActive = false;
     }
+  }
+
+  stopQawwaliBGM() {
+    if (this.qawwaliTimer) {
+      clearInterval(this.qawwaliTimer);
+      this.qawwaliTimer = null;
+    }
+
+    if (this.droneSa) {
+      try { this.droneSa.stop(); this.droneSa.disconnect(); } catch (e) {}
+      this.droneSa = null;
+    }
+    if (this.dronePa) {
+      try { this.dronePa.stop(); this.dronePa.disconnect(); } catch (e) {}
+      this.dronePa = null;
+    }
+    if (this.droneGain) {
+      try { this.droneGain.disconnect(); } catch (e) {}
+      this.droneGain = null;
+    }
+
+    this.qawwaliActive = false;
   }
 
   stopEngine() {

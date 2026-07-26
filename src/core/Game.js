@@ -439,6 +439,7 @@ export class Game {
       this._updateUIState('gameover-shell', false);
       this.clock.resume();
       this._updateTutorialPrompt();
+      audioManager.startQawwaliBGM();
     });
 
     this.stateMachine.onLeave(STATES.TUTORIAL, () => {
@@ -452,6 +453,7 @@ export class Game {
       this._updateUIState('tutorial-shell', false);
       this._updateUIState('gameover-shell', false);
       this.clock.resume();
+      audioManager.startQawwaliBGM();
     });
 
     this.stateMachine.onLeave(STATES.RUNNING, () => {
@@ -461,6 +463,7 @@ export class Game {
     this.stateMachine.onEnter(STATES.PAUSED, () => {
       this.clock.pause();
       this._updateUIState('pause-shell', true);
+      audioManager.stopQawwaliBGM();
     });
 
     this.stateMachine.onLeave(STATES.PAUSED, () => {
@@ -471,6 +474,7 @@ export class Game {
       this.clock.pause();
       this._updateUIState('hud-shell', false);
       this._updateUIState('gameover-shell', true);
+      audioManager.stopQawwaliBGM();
 
       // Report run completion payload to MegaGameBox host bridge
       gameBridge.onRunEnd(this.scoreSystem.score, 1, 'game_over');
