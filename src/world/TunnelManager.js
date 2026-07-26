@@ -72,9 +72,9 @@ export class TunnelManager {
     const segment = this.segmentPool.acquire();
     this.totalSegmentsSpawned++;
 
-    const isTier1 = (this.difficultyDirector.currentTierIndex === 0);
-    // In Tier 1 CALM, alternate every 2nd segment as a clean runway for generous spacing!
-    const restInterval = isTier1 ? 2 : 4;
+    const currentTierIdx = this.difficultyDirector.currentTierIndex;
+    // Gradual rest interval scaling: Tier 1 = every 2nd seg, Tier 2 = every 3rd seg, Tier 3+ = 4th seg
+    const restInterval = currentTierIdx === 0 ? 2 : (currentTierIdx === 1 ? 3 : 4);
 
     const isRest = (this.totalSegmentsSpawned % restInterval === 0);
     segment.reset(this.totalSegmentsSpawned, isRest);

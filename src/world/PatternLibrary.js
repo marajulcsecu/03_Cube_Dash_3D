@@ -477,15 +477,38 @@ export class PatternLibrary {
     return this.patterns.get(id) || null;
   }
 
-  getRandomPattern(rng, targetDifficulty = 1) {
+  getRandomPattern(rng, maxDifficulty = 1) {
     // Exclude special powerup patterns from random hazard pool
     const hazardPool = PATTERNS.filter(p => !p.id.includes('magnet_powerup'));
-    const matching = hazardPool.filter(p => p.difficulty === targetDifficulty || p.difficulty === targetDifficulty - 1);
+    
+    // Determine target difficulty level using a smooth weighted distribution curve
+    const roll = rng.next();
+    let selectedDiff = 1;
+
+    if (maxDifficulty >= 5) {
+      if (roll < 0.40) selectedDiff = rng.nextInt(1, 3); // 40% Breathing room & flow
+      else if (roll < 0.75) selectedDiff = 4;            // 35% Expert challenge
+      else selectedDiff = 5;                             // 25% Mastery peak trap
+    } else if (maxDifficulty >= 4) {
+      if (roll < 0.50) selectedDiff = rng.nextInt(1, 3); // 50% Flow
+      else selectedDiff = 4;                             // 50% Expert
+    } else if (maxDifficulty >= 3) {
+      if (roll < 0.60) selectedDiff = rng.nextInt(1, 2); // 60% Flow
+      else selectedDiff = 3;                             // 40% Focus
+    } else if (maxDifficulty >= 2) {
+      if (roll < 0.60) selectedDiff = 1;
+      else selectedDiff = 2;
+    } else {
+      selectedDiff = 1;
+    }
+
+    const matching = hazardPool.filter(p => p.difficulty === selectedDiff);
     if (matching.length === 0) {
-      const fallback = hazardPool.filter(p => p.difficulty <= targetDifficulty);
+      const fallback = hazardPool.filter(p => p.difficulty <= maxDifficulty);
       const index = rng.nextInt(0, fallback.length - 1);
       return fallback[index] || PATTERNS[0];
     }
+
     const index = rng.nextInt(0, matching.length - 1);
     return matching[index];
   }
