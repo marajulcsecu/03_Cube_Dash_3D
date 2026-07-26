@@ -29,6 +29,7 @@ export class Game {
     this.scoreSystem = new ScoreSystem();
     this.missionManager = new MissionManager();
     this.tutorialManager = new TutorialManager();
+    this.magnetTimer = 0.0;
     this.debugOverlay = null;
     this.animationFrameId = null;
 
@@ -274,6 +275,12 @@ export class Game {
             multiplier: this.scoreSystem.multiplier
           });
 
+          // Update magnet active timer & attraction
+          if (this.magnetTimer > 0) {
+            this.magnetTimer = Math.max(0, this.magnetTimer - delta);
+            tunnelManager.updateMagnetAttraction(player.position, delta);
+          }
+
           // Update HUD DOM Elements
           this._updateHUD();
 
@@ -289,6 +296,10 @@ export class Game {
               this.scoreSystem.collectCoin();
               audioManager.playCoinCollect(this.scoreSystem.streakCount);
               logger.info(`Collected Cyber Coin! Total: ${this.scoreSystem.coinsCount}`);
+            } else if (hitResult.type === 'magnet_powerup') {
+              this.magnetTimer = 10.0;
+              audioManager.playMagnetActivate();
+              logger.info('Activated Cyber Magnet Power-Up!');
             } else if (currentState === STATES.RUNNING) {
               if (this._isHandlingCollision) return;
               this._isHandlingCollision = true;
@@ -324,11 +335,22 @@ export class Game {
     const multEl = document.getElementById('hud-multiplier');
     const shardsEl = document.getElementById('hud-shards');
     const coinsEl = document.getElementById('hud-coins');
+    const magnetBoxEl = document.getElementById('hud-magnet-box');
+    const magnetTimerEl = document.getElementById('hud-magnet-timer');
 
     if (scoreEl) scoreEl.textContent = this.scoreSystem.score.toLocaleString();
     if (multEl) multEl.textContent = `${this.scoreSystem.multiplier}x`;
     if (shardsEl) shardsEl.textContent = this.scoreSystem.shardsCount.toString();
     if (coinsEl) coinsEl.textContent = this.scoreSystem.coinsCount.toString();
+
+    if (magnetBoxEl && magnetTimerEl) {
+      if (this.magnetTimer > 0) {
+        magnetBoxEl.style.display = 'flex';
+        magnetTimerEl.textContent = `${this.magnetTimer.toFixed(1)}s`;
+      } else {
+        magnetBoxEl.style.display = 'none';
+      }
+    }
   }
 
   render(delta = 0) {

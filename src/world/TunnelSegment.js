@@ -106,6 +106,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.COIN:
         this._addSingleCoin(this.getLaneX(hazardConfig.lane || 2), hazardConfig.y || 1.0, relativeZ);
         break;
+      case OBSTACLE_TYPES.MAGNET_POWERUP:
+        this._addCyberMagnet(hazardConfig.lane || 2, relativeZ);
+        break;
     }
   }
 
@@ -592,6 +595,55 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addCyberMagnet(laneIndex, relativeZ = 0) {
+    const x = this.getLaneX(laneIndex);
+    const y = 1.1;
+
+    const magnetGroup = new THREE.Group();
+    magnetGroup.name = 'CyberMagnet';
+
+    // 1. Red Metallic Horseshoe Magnet Arc (Torus)
+    const arcGeo = new THREE.TorusGeometry(0.38, 0.1, 12, 16, Math.PI);
+    arcGeo.rotateZ(Math.PI);
+    const redMat = this.materialFactory.get('cyberMagnetRed');
+    const arcMesh = new THREE.Mesh(arcGeo, redMat);
+    magnetGroup.add(arcMesh);
+
+    // 2. Silver Metallic Tip Caps
+    const capGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.18, 12);
+    const silverMat = this.materialFactory.get('tunnelWall');
+
+    const leftCap = new THREE.Mesh(capGeo, silverMat);
+    leftCap.position.set(-0.38, -0.09, 0);
+    magnetGroup.add(leftCap);
+
+    const rightCap = new THREE.Mesh(capGeo, silverMat);
+    rightCap.position.set(0.38, -0.09, 0);
+    magnetGroup.add(rightCap);
+
+    // 3. Magnetic Field Cyan Glow Sphere Sheath
+    const fieldGeo = new THREE.SphereGeometry(0.55, 12, 12);
+    const fieldMat = new THREE.MeshBasicMaterial({
+      color: 0x00f3ff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.6
+    });
+    const fieldMesh = new THREE.Mesh(fieldGeo, fieldMat);
+    magnetGroup.add(fieldMesh);
+
+    magnetGroup.position.set(x, y, relativeZ);
+    this.obstacleGroup.add(magnetGroup);
+
+    const obstacleObj = {
+      x, y, relativeZ, width: 0.9, height: 0.9, depth: 0.9,
+      type: 'magnet_powerup', active: true, isCollectible: true, mesh: magnetGroup,
+      fieldMesh,
+      hoverPhase: Math.random() * Math.PI * 2
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -697,6 +749,11 @@ export class TunnelSegment {
           obstacle.mesh.rotation.y += delta * 3.5;
           obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.0;
           obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.12;
+        } else if (obstacle.type === 'magnet_powerup' && obstacle.mesh) {
+          // Spin and hover magnet item smoothly
+          obstacle.mesh.rotation.y += delta * 3.0;
+          obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.5;
+          obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.15;
         }
       }
     }

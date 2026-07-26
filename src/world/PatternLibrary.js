@@ -19,6 +19,7 @@ export const OBSTACLE_TYPES = {
   WORMHOLE_VOID: 'wormhole_void',
   COIN_TRAIL: 'coin_trail',
   COIN: 'coin',
+  MAGNET_POWERUP: 'magnet_powerup',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -99,6 +100,20 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0, count: 4 }
+    ]
+  },
+  {
+    id: 'magnet_powerup_center',
+    name: 'Cyber Magnet Power-Up Item',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 2, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.MAGNET_POWERUP, lane: 2, relativeZ: 0 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 1, relativeZ: -2, count: 3 },
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 3, relativeZ: -2, count: 3 }
     ]
   },
   {

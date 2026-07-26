@@ -4,6 +4,7 @@
  * validated pattern library generation, and object recycling.
  */
 
+import * as THREE from 'three';
 import { ObjectPool } from './ObjectPools.js';
 import { TunnelSegment } from './TunnelSegment.js';
 import { SeededRNG } from './SeededRNG.js';
@@ -151,6 +152,32 @@ export class TunnelManager {
     }
 
     this._recyclePassedSegments();
+  }
+
+  updateMagnetAttraction(playerPos, delta) {
+    if (!playerPos) return;
+
+    for (const segment of this.activeSegments) {
+      if (!segment.obstacles) continue;
+      const segZ = segment.meshGroup.position.z;
+
+      for (const obstacle of segment.obstacles) {
+        if (!obstacle.active || obstacle.type !== 'coin' || !obstacle.mesh) continue;
+
+        // Pull toward player position
+        const targetPos = new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z);
+        const pullSpeed = delta * 18.0;
+
+        obstacle.x = THREE.MathUtils.lerp(obstacle.x, playerPos.x, pullSpeed);
+        obstacle.y = THREE.MathUtils.lerp(obstacle.y, playerPos.y, pullSpeed);
+        obstacle.mesh.position.x = obstacle.x;
+        obstacle.mesh.position.y = obstacle.y;
+
+        const targetRelZ = playerPos.z - segZ;
+        obstacle.relativeZ = THREE.MathUtils.lerp(obstacle.relativeZ, targetRelZ, pullSpeed);
+        obstacle.mesh.position.z = obstacle.relativeZ;
+      }
+    }
   }
 
   _recyclePassedSegments() {

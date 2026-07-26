@@ -62,7 +62,8 @@ export class DebugOverlay {
           <button id="spawn-laser-btn" style="flex: 1; min-width: 50px; background: rgba(0, 243, 255, 0.2); color: #00f3ff; border: 1px solid #00f3ff; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">⚡ Laser</button>
           <button id="spawn-rotor-btn" style="flex: 1; min-width: 45px; background: rgba(255, 204, 0, 0.2); color: #ffcc00; border: 1px solid #ffcc00; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪓 Saw Rotor</button>
           <button id="spawn-wormhole-btn" style="flex: 1; min-width: 45px; background: rgba(157, 78, 221, 0.2); color: #9d4edd; border: 1px solid #9d4edd; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🌀 Wormhole</button>
-          <button id="spawn-coin-btn" style="flex: 1; min-width: 45px; background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪙 Coins</button>
+          <button id="spawn-coin-btn" style="flex: 1; min-width: 40px; background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🪙 Coins</button>
+          <button id="spawn-magnet-btn" style="flex: 1; min-width: 40px; background: rgba(255, 0, 68, 0.2); color: #ff0044; border: 1px solid #ff0044; font-size: 8px; cursor: pointer; padding: 3px 0; border-radius: 3px;">🧲 Magnet</button>
         </div>
       </div>
       <div style="margin-top: 6px; border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 4px;">
@@ -114,6 +115,7 @@ export class DebugOverlay {
     this.overlayEl.querySelector('#spawn-rotor-btn').addEventListener('click', () => spawnPattern('plasma_rotor_center_saw'));
     this.overlayEl.querySelector('#spawn-wormhole-btn').addEventListener('click', () => spawnPattern('wormhole_void_center_pit'));
     this.overlayEl.querySelector('#spawn-coin-btn').addEventListener('click', () => spawnPattern('coin_trail_center'));
+    this.overlayEl.querySelector('#spawn-magnet-btn').addEventListener('click', () => spawnPattern('magnet_powerup_center'));
 
     patternSelect.addEventListener('change', (e) => {
       const selectedId = e.target.value;

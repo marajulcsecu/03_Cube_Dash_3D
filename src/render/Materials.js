@@ -125,6 +125,16 @@ export class MaterialFactory {
       metalness: 0.9,
       flatShading: true
     }));
+
+    // Cyber Magnet Power-Up Material (crimson metallic body)
+    this.materials.set('cyberMagnetRed', new THREE.MeshStandardMaterial({
+      color: 0xff0044,
+      emissive: 0x990022,
+      emissiveIntensity: 1.2,
+      roughness: 0.2,
+      metalness: 0.8,
+      flatShading: true
+    }));
   }
 
   get(name) {
