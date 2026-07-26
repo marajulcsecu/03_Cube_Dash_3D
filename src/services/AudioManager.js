@@ -382,6 +382,33 @@ export class AudioManager {
     } catch (e) {}
   }
 
+  playCoinCollect(streak = 0) {
+    if (!this._canPlay()) return;
+
+    try {
+      const now = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      const baseFreq = 987.77; // B5 pitch
+      const pitchShift = Math.min( streak * 80, 600 );
+      const startFreq = baseFreq + pitchShift;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(startFreq, now);
+      osc.frequency.exponentialRampToValueAtTime(startFreq * 1.33, now + 0.08);
+
+      gain.gain.setValueAtTime(this.volume * 0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } catch (e) {}
+  }
+
   _canPlay() {
     return this.initialized && this.ctx && !this.muted && this.ctx.state === 'running';
   }

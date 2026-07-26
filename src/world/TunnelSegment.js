@@ -100,6 +100,12 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.WORMHOLE_VOID:
         this._addWormholeVoid(hazardConfig.lane || 2, relativeZ, hazardConfig.scale || 1.0);
         break;
+      case OBSTACLE_TYPES.COIN_TRAIL:
+        this._addCoinTrail(hazardConfig.lane || 2, relativeZ, hazardConfig.count || 3);
+        break;
+      case OBSTACLE_TYPES.COIN:
+        this._addSingleCoin(this.getLaneX(hazardConfig.lane || 2), hazardConfig.y || 1.0, relativeZ);
+        break;
     }
   }
 
@@ -514,6 +520,49 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addCoinTrail(laneIndex, relativeZ = 0, count = 3) {
+    const x = this.getLaneX(laneIndex);
+    const spacing = 1.8;
+
+    for (let i = 0; i < count; i++) {
+      const z = relativeZ - (i * spacing);
+      this._addSingleCoin(x, 1.0, z);
+    }
+  }
+
+  _addSingleCoin(x, y, z) {
+    const coinGroup = new THREE.Group();
+    coinGroup.name = 'CyberCoin';
+
+    // 1. Gold Metallic Coin Disc (Cylinder)
+    const coinGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.08, 12);
+    coinGeo.rotateX(Math.PI / 2);
+    const goldMat = this.materialFactory.get('cyberCoinGold');
+    const coinMesh = new THREE.Mesh(coinGeo, goldMat);
+    coinGroup.add(coinMesh);
+
+    // 2. Inner Neon Cyan Emissive Core Node
+    const coreGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.09, 8);
+    coreGeo.rotateX(Math.PI / 2);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0x00ffff,
+      emissive: 0x00ffff,
+      emissiveIntensity: 2.0
+    });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    coinGroup.add(coreMesh);
+
+    coinGroup.position.set(x, y, z);
+    this.obstacleGroup.add(coinGroup);
+
+    const obstacleObj = {
+      x, y, relativeZ: z, width: 0.7, height: 0.7, depth: 0.7,
+      type: 'coin', active: true, isCollectible: true, mesh: coinGroup,
+      coinMesh
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -614,6 +663,9 @@ export class TunnelSegment {
           if (obstacle.particleGroup) {
             obstacle.particleGroup.rotation.z -= delta * 4.0;
           }
+        } else if (obstacle.type === 'coin' && obstacle.mesh) {
+          // Spin golden coins continuously
+          obstacle.mesh.rotation.y += delta * 4.0;
         }
       }
     }

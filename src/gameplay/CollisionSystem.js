@@ -68,6 +68,12 @@ export class CollisionSystem {
                 obstacle.mesh.visible = false;
               }
               return { hit: true, type: 'shard', obstacle };
+            } else if (obstacle.type === 'coin') {
+              obstacle.active = false;
+              if (obstacle.mesh) {
+                obstacle.mesh.visible = false;
+              }
+              return { hit: true, type: 'coin', obstacle };
             } else {
               return { hit: true, type: obstacle.type || 'wall', obstacle };
             }

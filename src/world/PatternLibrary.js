@@ -17,6 +17,8 @@ export const OBSTACLE_TYPES = {
   LASER_GRID: 'laser_grid',
   PLASMA_ROTOR: 'plasma_rotor',
   WORMHOLE_VOID: 'wormhole_void',
+  COIN_TRAIL: 'coin_trail',
+  COIN: 'coin',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -85,6 +87,18 @@ export const PATTERNS = [
     hazards: [
       { type: OBSTACLE_TYPES.LOW_BARRIER, lane: 2, relativeZ: 0 },
       { type: OBSTACLE_TYPES.SHARD_TRAIL, lane: 2, relativeZ: -2 }
+    ]
+  },
+  {
+    id: 'coin_trail_center',
+    name: '3D Cyber Gold Coin Trail',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 2, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.COIN_TRAIL, lane: 2, relativeZ: 0, count: 4 }
     ]
   },
   {

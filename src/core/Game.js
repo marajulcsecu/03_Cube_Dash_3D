@@ -285,6 +285,10 @@ export class Game {
               audioManager.playShard();
               this._checkTutorialAdvance('SHARD');
               logger.info(`Collected Energy Shard! Total: ${this.scoreSystem.shardsCount}`);
+            } else if (hitResult.type === 'coin') {
+              this.scoreSystem.collectCoin();
+              audioManager.playCoinCollect(this.scoreSystem.streakCount);
+              logger.info(`Collected Cyber Coin! Total: ${this.scoreSystem.coinsCount}`);
             } else if (currentState === STATES.RUNNING) {
               if (this._isHandlingCollision) return;
               this._isHandlingCollision = true;
@@ -319,10 +323,12 @@ export class Game {
     const scoreEl = document.getElementById('hud-score');
     const multEl = document.getElementById('hud-multiplier');
     const shardsEl = document.getElementById('hud-shards');
+    const coinsEl = document.getElementById('hud-coins');
 
     if (scoreEl) scoreEl.textContent = this.scoreSystem.score.toLocaleString();
     if (multEl) multEl.textContent = `${this.scoreSystem.multiplier}x`;
     if (shardsEl) shardsEl.textContent = this.scoreSystem.shardsCount.toString();
+    if (coinsEl) coinsEl.textContent = this.scoreSystem.coinsCount.toString();
   }
 
   render(delta = 0) {

@@ -14,6 +14,7 @@ export class ScoreSystem {
     this.streakThreshold = 3; // Every 3 clean actions increases multiplier by +1
 
     this.shardsCount = 0;
+    this.coinsCount = 0;
     this.nearMissCount = 0;
 
     // Cooldown map to prevent farming near-miss score on the same obstacle
@@ -25,6 +26,7 @@ export class ScoreSystem {
     this.multiplier = 1;
     this.streakCount = 0;
     this.shardsCount = 0;
+    this.coinsCount = 0;
     this.nearMissCount = 0;
     this.scoredObstacles.clear();
   }
@@ -32,7 +34,7 @@ export class ScoreSystem {
   updateDistance(distanceMeters) {
     // 1 meter = 10 integer points * current multiplier
     const distancePoints = Math.floor(distanceMeters) * 10 * this.multiplier;
-    this.score = distancePoints + (this.shardsCount * 50 * this.multiplier) + (this.nearMissCount * 25 * this.multiplier);
+    this.score = distancePoints + (this.shardsCount * 50 * this.multiplier) + (this.coinsCount * 50 * this.multiplier) + (this.nearMissCount * 25 * this.multiplier);
 
     if (this.score > this.highScore) {
       this.highScore = this.score;
@@ -42,6 +44,21 @@ export class ScoreSystem {
 
   collectShard() {
     this.shardsCount++;
+    this.score += 50 * this.multiplier;
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      this._saveHighScore(this.highScore);
+    }
+    this._incrementStreak();
+  }
+
+  collectCoin() {
+    this.coinsCount++;
+    this.score += 50 * this.multiplier;
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      this._saveHighScore(this.highScore);
+    }
     this._incrementStreak();
   }
 

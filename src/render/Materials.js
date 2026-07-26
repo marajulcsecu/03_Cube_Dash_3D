@@ -115,6 +115,16 @@ export class MaterialFactory {
       metalness: 0.8,
       flatShading: true
     }));
+
+    // 3D Cyber Coin Gold Material (brilliant metallic gold sheen with emissive glow)
+    this.materials.set('cyberCoinGold', new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      emissive: 0xffaa00,
+      emissiveIntensity: 0.9,
+      roughness: 0.1,
+      metalness: 0.9,
+      flatShading: true
+    }));
   }
 
   get(name) {
