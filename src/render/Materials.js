@@ -155,6 +155,16 @@ export class MaterialFactory {
       metalness: 0.8,
       flatShading: true
     }));
+
+    // Cyber EMP Sonic Bomb Material (glowing neon plasma orange)
+    this.materials.set('cyberEmpOrange', new THREE.MeshStandardMaterial({
+      color: 0xff5500,
+      emissive: 0xff2200,
+      emissiveIntensity: 1.8,
+      roughness: 0.1,
+      metalness: 0.9,
+      flatShading: true
+    }));
   }
 
   get(name) {

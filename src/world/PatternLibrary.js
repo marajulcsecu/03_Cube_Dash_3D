@@ -22,6 +22,7 @@ export const OBSTACLE_TYPES = {
   MAGNET_POWERUP: 'magnet_powerup',
   SHIELD_POWERUP: 'shield_powerup',
   MULTIPLIER_POWERUP: 'multiplier_powerup',
+  EMP_POWERUP: 'emp_powerup',
   SHARD_TRAIL: 'shard_trail',
   REST: 'rest'
 };
@@ -135,6 +136,18 @@ export const PATTERNS = [
     safePath: [0, 1, 2, 3, 4],
     hazards: [
       { type: OBSTACLE_TYPES.MULTIPLIER_POWERUP, lane: 2, relativeZ: 0 }
+    ]
+  },
+  {
+    id: 'emp_powerup_center',
+    name: 'EMP Sonic Blast Wave Bomb',
+    difficulty: 1,
+    minSpeedTier: 1,
+    recoveryWindow: 1,
+    incompatibleNeighbors: [],
+    safePath: [0, 1, 2, 3, 4],
+    hazards: [
+      { type: OBSTACLE_TYPES.EMP_POWERUP, lane: 2, relativeZ: 0 }
     ]
   },
   {

@@ -320,6 +320,12 @@ export class Game {
               this.scoreSystem.setMultiplierBoost(2);
               audioManager.playMultiplierActivate();
               logger.info('Activated 2x Score Multiplier Boost!');
+            } else if (hitResult.type === 'emp_powerup') {
+              const clearedCount = tunnelManager.clearAllScreenObstacles();
+              audioManager.playEmpBlast();
+              this.renderer.sceneFactory.triggerCameraShake(0.4);
+              this.scoreSystem.addBonusPoints(500);
+              logger.info(`Activated EMP Sonic Blast Wave! Cleared ${clearedCount} active screen hazards!`);
             } else if (hitResult.type === 'shield_break') {
               audioManager.playShieldShatter();
               this.renderer.sceneFactory.triggerCameraShake(0.2);

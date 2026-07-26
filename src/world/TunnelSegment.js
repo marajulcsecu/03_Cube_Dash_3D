@@ -115,6 +115,9 @@ export class TunnelSegment {
       case OBSTACLE_TYPES.MULTIPLIER_POWERUP:
         this._addCyberMultiplier(hazardConfig.lane || 2, relativeZ);
         break;
+      case OBSTACLE_TYPES.EMP_POWERUP:
+        this._addCyberEmp(hazardConfig.lane || 2, relativeZ);
+        break;
     }
   }
 
@@ -718,6 +721,44 @@ export class TunnelSegment {
     this.obstacles.push(obstacleObj);
   }
 
+  _addCyberEmp(laneIndex, relativeZ = 0) {
+    const x = this.getLaneX(laneIndex);
+    const y = 0.5;
+
+    const empGroup = new THREE.Group();
+    empGroup.name = 'CyberEmp';
+
+    // 1. Glowing Neon Plasma Orange Sphere Nucleus
+    const sphereGeo = new THREE.SphereGeometry(0.38, 16, 16);
+    const orangeMat = this.materialFactory.get('cyberEmpOrange');
+    const sphereMesh = new THREE.Mesh(sphereGeo, orangeMat);
+    empGroup.add(sphereMesh);
+
+    // 2. Dual Revolving Cyan & Gold Orbital Rings
+    const ring1Geo = new THREE.TorusGeometry(0.55, 0.04, 12, 24);
+    const cyanMat = this.materialFactory.get('cyberShieldBlue');
+    const ring1Mesh = new THREE.Mesh(ring1Geo, cyanMat);
+    ring1Mesh.rotation.x = Math.PI / 3;
+    empGroup.add(ring1Mesh);
+
+    const ring2Geo = new THREE.TorusGeometry(0.62, 0.04, 12, 24);
+    const goldMat = this.materialFactory.get('cyberCoinGold');
+    const ring2Mesh = new THREE.Mesh(ring2Geo, goldMat);
+    ring2Mesh.rotation.y = Math.PI / 3;
+    empGroup.add(ring2Mesh);
+
+    empGroup.position.set(x, y, relativeZ);
+    this.obstacleGroup.add(empGroup);
+
+    const obstacleObj = {
+      x, y, relativeZ, width: 1.4, height: 1.4, depth: 1.4,
+      type: 'emp_powerup', active: true, isCollectible: true, mesh: empGroup,
+      ring1Mesh, ring2Mesh,
+      hoverPhase: Math.random() * Math.PI * 2
+    };
+    this.obstacles.push(obstacleObj);
+  }
+
   addFloorGap(laneIndices = [0]) {
     this.hasGap = true;
     this.gapLanes = laneIndices;
@@ -844,6 +885,12 @@ export class TunnelSegment {
             obstacle.haloMesh.rotation.x += delta * 2.5;
           }
           obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 3.5;
+          obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.15;
+        } else if (obstacle.type === 'emp_powerup' && obstacle.mesh) {
+          // Revolving dual orbital rings in opposite directions
+          if (obstacle.ring1Mesh) obstacle.ring1Mesh.rotation.z += delta * 4.0;
+          if (obstacle.ring2Mesh) obstacle.ring2Mesh.rotation.x -= delta * 3.5;
+          obstacle.hoverPhase = (obstacle.hoverPhase || 0) + delta * 4.0;
           obstacle.mesh.position.y = obstacle.y + Math.sin(obstacle.hoverPhase) * 0.15;
         }
       }

@@ -90,20 +90,32 @@ export class TunnelManager {
 
       // Controlled rare chance for Power-Ups or Coin Trails on safe runway segments
       const rewardRoll = this.rng.next();
-      if (rewardRoll < 0.08) {
-        // 8% Rare Cyber Magnet Power-Up
+      if (rewardRoll < 0.07) {
+        // 7% Rare Cyber Magnet Power-Up
         const pattern = this.patternLibrary.getPattern('magnet_powerup_center');
         if (pattern && pattern.hazards) {
           pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
         }
-      } else if (rewardRoll < 0.16) {
-        // 8% Rare Energy Shield Power-Up
+      } else if (rewardRoll < 0.14) {
+        // 7% Rare Energy Shield Power-Up
         const pattern = this.patternLibrary.getPattern('shield_powerup_center');
         if (pattern && pattern.hazards) {
           pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
         }
-      } else if (rewardRoll < 0.35) {
-        // 19% Coin Trail Bonus
+      } else if (rewardRoll < 0.21) {
+        // 7% Rare Score Multiplier Boost Orb
+        const pattern = this.patternLibrary.getPattern('multiplier_powerup_center');
+        if (pattern && pattern.hazards) {
+          pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
+        }
+      } else if (rewardRoll < 0.27) {
+        // 6% Ultra-Rare EMP Sonic Blast Bomb
+        const pattern = this.patternLibrary.getPattern('emp_powerup_center');
+        if (pattern && pattern.hazards) {
+          pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
+        }
+      } else if (rewardRoll < 0.45) {
+        // 18% Coin Trail Bonus
         const pattern = this.patternLibrary.getPattern('coin_trail_center');
         if (pattern && pattern.hazards) {
           pattern.hazards.forEach(h => segment.addObstacleFromConfig(h));
@@ -228,6 +240,24 @@ export class TunnelManager {
       this.segmentPool.release(oldestSegment);
       this._spawnNextSegment(nextZ);
     }
+  }
+
+  clearAllScreenObstacles() {
+    let clearedCount = 0;
+    for (const segment of this.activeSegments) {
+      if (segment.obstacles) {
+        for (const obstacle of segment.obstacles) {
+          if (obstacle.active && !obstacle.isCollectible) {
+            obstacle.active = false;
+            if (obstacle.mesh) {
+              obstacle.mesh.visible = false;
+            }
+            clearedCount++;
+          }
+        }
+      }
+    }
+    return clearedCount;
   }
 
   setSeed(seed) {
