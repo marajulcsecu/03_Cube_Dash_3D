@@ -164,18 +164,33 @@ export class TunnelManager {
       for (const obstacle of segment.obstacles) {
         if (!obstacle.active || obstacle.type !== 'coin' || !obstacle.mesh) continue;
 
-        // Pull toward player position
-        const targetPos = new THREE.Vector3(playerPos.x, playerPos.y, playerPos.z);
-        const pullSpeed = delta * 18.0;
-
-        obstacle.x = THREE.MathUtils.lerp(obstacle.x, playerPos.x, pullSpeed);
-        obstacle.y = THREE.MathUtils.lerp(obstacle.y, playerPos.y, pullSpeed);
-        obstacle.mesh.position.x = obstacle.x;
-        obstacle.mesh.position.y = obstacle.y;
-
+        // Target relative Z position inside segment space
         const targetRelZ = playerPos.z - segZ;
-        obstacle.relativeZ = THREE.MathUtils.lerp(obstacle.relativeZ, targetRelZ, pullSpeed);
-        obstacle.mesh.position.z = obstacle.relativeZ;
+
+        // Vector towards player position
+        const dx = playerPos.x - obstacle.x;
+        const dy = playerPos.y - obstacle.y;
+        const dz = targetRelZ - obstacle.relativeZ;
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+        if (dist < 40.0) { // Active within 40m radius
+          const speed = Math.max(30.0, 60.0 - dist); // Dynamic acceleration as coin approaches player
+          const moveStep = delta * speed;
+
+          if (dist <= moveStep) {
+            obstacle.x = playerPos.x;
+            obstacle.y = playerPos.y;
+            obstacle.relativeZ = targetRelZ;
+          } else {
+            obstacle.x += (dx / dist) * moveStep;
+            obstacle.y += (dy / dist) * moveStep;
+            obstacle.relativeZ += (dz / dist) * moveStep;
+          }
+
+          obstacle.mesh.position.x = obstacle.x;
+          obstacle.mesh.position.y = obstacle.y;
+          obstacle.mesh.position.z = obstacle.relativeZ;
+        }
       }
     }
   }

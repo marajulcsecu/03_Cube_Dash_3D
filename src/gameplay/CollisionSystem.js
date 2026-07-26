@@ -62,18 +62,12 @@ export class CollisionSystem {
           );
 
           if (this.playerBox.intersectsBox(this.obstacleBox)) {
-            if (obstacle.type === 'shard' || obstacle.type === 'collectible') {
+            if (obstacle.isCollectible || obstacle.type === 'shard' || obstacle.type === 'coin' || obstacle.type === 'magnet_powerup') {
               obstacle.active = false;
               if (obstacle.mesh) {
                 obstacle.mesh.visible = false;
               }
-              return { hit: true, type: 'shard', obstacle };
-            } else if (obstacle.type === 'coin') {
-              obstacle.active = false;
-              if (obstacle.mesh) {
-                obstacle.mesh.visible = false;
-              }
-              return { hit: true, type: 'coin', obstacle };
+              return { hit: true, type: obstacle.type || 'coin', obstacle };
             } else {
               return { hit: true, type: obstacle.type || 'wall', obstacle };
             }
